@@ -1,0 +1,84 @@
+[project]
+name = "susceptibility-agent-v1"
+version = "0.1.0"
+description = "A multi-agent system for avoiding detection in Naval Electronic Warfare"
+authors = [
+    { name = "Pablo Martínez Agulló", email = "pablo.martinez.agullo@gmail.com" }
+]
+license = { text = "GNU General Public License (GPL) 3.0" }
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+
+dependencies = [
+    # Core CrewAI dependencies
+    "crewai",
+    "crewai[tools]",
+    
+    # LLM providers
+    "anthropic>=0.39.0",
+    "openai",
+    "python-dotenv",
+    
+    # Document processing (minimal for this naval project)
+    "Pillow",                   # Image processing
+    "PyPDF2",                   # PDF processing
+    "numpy<2",                  # Numerical operations
+    
+    # EXIF metadata (from original project)
+    "PyExifTool>=0.5.6",
+    
+    # Geolocation (from original project)
+    "geopy",                    # Geocoding
+    "requests",                 # HTTP requests
+    
+    # Data validation and processing
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    
+    # Gradio interface
+    "gradio",
+    
+    # Utilities
+    "PyYAML>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+# Optional audio transcription (excluded from main deps due to pylance compatibility)
+# Install with: uv pip install -e ".[audio]"
+audio = [
+    "openai-whisper",           # Audio transcription
+    "pyannote.audio>=3.1.1",    # Speaker diarization
+    "torch",                    # Required by pyannote
+    "torchaudio",               # Required by pyannote
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+# Force UV to resolve only for macOS Intel x86_64
+# This prevents pylance compatibility issues from pyannote.audio
+required-environments = [
+    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+]
+
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

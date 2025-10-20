@@ -47,6 +47,9 @@ venv.bak/
 .env.local
 .env.*.local
 *.env
+*/*.env
+uv.lock
+*/uv.lock
 
 # Logs
 *.log
@@ -87,6 +90,7 @@ tmp/
 
 # OS specific
 Thumbs.db
+.DS_Store
 
 # Coverage reports
 htmlcov/
