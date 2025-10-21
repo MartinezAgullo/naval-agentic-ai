@@ -1,0 +1,126 @@
+{
+    "emitters": {
+      "early_warning_radar": {
+        "threat_score": 85,
+        "category": "high",
+        "detection_probability": 0.9,
+        "recommended_action": "Immediate emission control - reduce radar cross-section",
+        "description": "Long-range surveillance radar capable of detecting ships at extended ranges (200-400 km)",
+        "typical_frequency": "2-4 GHz",
+        "typical_power": "1-10 MW"
+      },
+      "fire_control_radar": {
+        "threat_score": 95,
+        "category": "critical",
+        "detection_probability": 0.95,
+        "recommended_action": "Emergency stealth mode - prepare defensive countermeasures",
+        "description": "Targeting radar indicating imminent weapon engagement - missile lock detected",
+        "typical_frequency": "8-12 GHz",
+        "typical_power": "10-100 kW"
+      },
+      "missile_guidance_radar": {
+        "threat_score": 98,
+        "category": "critical",
+        "detection_probability": 0.98,
+        "recommended_action": "IMMEDIATE ACTION - Activate all countermeasures and evasive maneuvers",
+        "description": "Active missile seeker radar - incoming threat",
+        "typical_frequency": "8-18 GHz",
+        "typical_power": "1-10 kW"
+      },
+      "airborne_early_warning": {
+        "threat_score": 88,
+        "category": "high",
+        "detection_probability": 0.92,
+        "recommended_action": "Reduce emissions - airborne platform detected with extended detection range",
+        "description": "Airborne surveillance radar (AWACS type) with 360-degree coverage",
+        "typical_frequency": "1-4 GHz",
+        "typical_power": "1-5 MW"
+      },
+      "surface_search_radar": {
+        "threat_score": 70,
+        "category": "medium",
+        "detection_probability": 0.75,
+        "recommended_action": "Monitor closely - warship surface search radar detected",
+        "description": "Naval surface search radar for ship detection and tracking",
+        "typical_frequency": "5-10 GHz",
+        "typical_power": "10-250 kW"
+      },
+      "navigation_radar": {
+        "threat_score": 40,
+        "category": "low",
+        "detection_probability": 0.5,
+        "recommended_action": "Continue monitoring - commercial/civil navigation radar",
+        "description": "Standard maritime navigation radar - likely civilian vessel",
+        "typical_frequency": "9-10 GHz",
+        "typical_power": "2-50 kW"
+      },
+      "weather_radar": {
+        "threat_score": 25,
+        "category": "low",
+        "detection_probability": 0.3,
+        "recommended_action": "No action required - meteorological radar",
+        "description": "Weather surveillance radar - no threat indication",
+        "typical_frequency": "5-6 GHz",
+        "typical_power": "10-750 kW"
+      },
+      "communication": {
+        "threat_score": 30,
+        "category": "low",
+        "detection_probability": 0.3,
+        "recommended_action": "Monitor communications - assess intent and identify source",
+        "description": "Radio communication signals - military or civilian",
+        "typical_frequency": "30-512 MHz",
+        "typical_power": "1-100 W"
+      },
+      "datalink": {
+        "threat_score": 65,
+        "category": "medium",
+        "detection_probability": 0.7,
+        "recommended_action": "Assess coordination - military datalink detected indicating network operations",
+        "description": "Tactical data link (Link 11/16/22) for networked operations",
+        "typical_frequency": "960-1215 MHz",
+        "typical_power": "10-1000 W"
+      },
+      "jammer": {
+        "threat_score": 90,
+        "category": "critical",
+        "detection_probability": 0.85,
+        "recommended_action": "Activate counter-jamming - switch to backup frequencies immediately",
+        "description": "Active jamming system targeting communications or sensors - hostile electronic attack",
+        "typical_frequency": "Variable",
+        "typical_power": "100 W - 10 kW"
+      },
+      "iff_interrogator": {
+        "threat_score": 55,
+        "category": "medium",
+        "detection_probability": 0.6,
+        "recommended_action": "Respond per IFF procedures - military identification system detected",
+        "description": "Identification Friend or Foe interrogator - attempting to identify vessels",
+        "typical_frequency": "1030/1090 MHz",
+        "typical_power": "1-10 kW"
+      },
+      "civilian_radar": {
+        "threat_score": 20,
+        "category": "low",
+        "detection_probability": 0.25,
+        "recommended_action": "Acknowledge presence - likely merchant or fishing vessel",
+        "description": "Generic civilian radar emissions - low threat",
+        "typical_frequency": "3-10 GHz",
+        "typical_power": "1-50 kW"
+      },
+      "unknown": {
+        "threat_score": 60,
+        "category": "medium",
+        "detection_probability": 0.6,
+        "recommended_action": "Increase vigilance - gather more intelligence on unidentified emitter",
+        "description": "Unidentified electromagnetic emitter requiring further analysis and classification",
+        "typical_frequency": "Unknown",
+        "typical_power": "Unknown"
+      }
+    },
+    "database_version": "1.0",
+    "last_updated": "2025-10-20",
+    "notes": "Threat scores are relative assessments (0-100) based on detection capability and hostile intent indicators. Detection probability reflects likelihood of our vessel being tracked by the emitter."
+  }
+
+//   Lookup table of electromagnetic emitters with their threat levels and recommended responses.

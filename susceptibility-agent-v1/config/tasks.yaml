@@ -1,0 +1,456 @@
+signal_processing_task:
+  description: >
+    MISSION: Process incoming electromagnetic signal data from ship's sensors.
+    Identify and classify all detected emitters with technical parameters.
+    
+    EXECUTION SEQUENCE:
+    
+    1. **Identify Signal Data Type**
+       Input provided: {signal_input}
+       - Use Input Type Determiner to identify format (JSON file, JSON string, text description)
+       - Determine if data is from radar sensors or EW systems
+    
+    2. **Process Signal Data**
+       - IF radar/ESM data: Use Radar Signal Processor
+       - IF EW/jamming data: Use EW Signal Processor  
+       - IF text description: Parse and extract emitter information manually
+       
+       Extract for EACH emitter:
+       - Emitter ID or designation
+       - Emitter type (radar, communication, jammer, etc.)
+       - Frequency (MHz)
+       - Power level (dBm)
+       - Bearing (degrees, if available)
+       - Range estimate (km, if available)
+       - Classification (Early Warning, Fire Control, Navigation, etc.)
+    
+    3. **Compile Signal Intelligence Report**
+       - List ALL detected emitters with complete technical parameters
+       - Group by emitter type
+       - Flag any CRITICAL emitters (fire control, missile guidance, jamming)
+       - Note data quality and any ambiguous detections
+    
+  agent: signal_intelligence_agent
+  
+  expected_output: >
+    A technical signal intelligence report formatted as follows:
+    
+    ===================================================================
+    SIGNAL INTELLIGENCE REPORT
+    ===================================================================
+    
+    SENSOR DATA SOURCE: [Radar/ESM/ELINT/Manual Report]
+    DETECTION TIME: [Timestamp if available]
+    TOTAL EMITTERS DETECTED: [Count]
+    
+    ===================================================================
+    EMITTER DETECTIONS - BY TYPE
+    ===================================================================
+    
+    [RADAR EMITTERS]
+    ----------------
+    Emitter ID: E-001
+      Type: Early Warning Radar
+      Classification: Long-range surveillance
+      Frequency: 2850 MHz
+      Power: 62.5 dBm
+      Bearing: 045° (Northeast)
+      Range: 85 km (estimated)
+      
+    Emitter ID: E-002
+      Type: Fire Control Radar
+      Classification: Targeting/tracking system
+      Frequency: 9500 MHz
+      Power: 68.0 dBm
+      Bearing: 132° (Southeast)
+      Range: 42 km (estimated)
+    
+    [COMMUNICATION EMITTERS]
+    ------------------------
+    [List communication signals detected...]
+    
+    [JAMMING/EW THREATS]
+    --------------------
+    [List any active jamming or electronic attack...]
+    
+    ===================================================================
+    CRITICAL DETECTIONS (Immediate Attention)
+    ===================================================================
+    
+    [List any fire control radars, missile guidance, or active jamming]
+    
+    ===================================================================
+    DATA QUALITY ASSESSMENT
+    ===================================================================
+    
+    Quality: [Excellent/Good/Fair/Poor]
+    Limitations: [Bearing uncertain, range estimates approximate, etc.]
+    Ambiguous Detections: [Any emitters requiring additional analysis]
+    
+    ===================================================================
+    INTELLIGENCE SUMMARY
+    ===================================================================
+    
+    [Brief 2-3 sentence summary of the electromagnetic environment]
+  
+  output_file: output/signal_processing_task.md
+
+threat_assessment_task:
+  description: >
+    MISSION: Assess threat level posed by detected electromagnetic emitters.
+    Determine detection probability, calculate risk scores, and evaluate own ship's signature.
+    
+    EXECUTION SEQUENCE:
+    
+    1. **Query Threat Database for Each Emitter**
+       - For EACH emitter in the signal intelligence report:
+         * Use Emitter Threat Lookup Tool with emitter type/classification
+         * Record threat score (0-100)
+         * Record threat category (LOW/MEDIUM/HIGH/CRITICAL)
+         * Record detection probability (0-100%)
+         * Record recommended action
+    
+    2. **Calculate Own Ship EM Signature**
+       - Use EM Signature Calculator with current active systems
+       - Determine own ship's detectability range
+       - Assess signature strength (minimal/low/medium/high/maximum)
+       - Identify which systems contribute most to signature
+    
+    3. **Synthesize Threat Picture**
+       - Identify highest threat emitter(s)
+       - Calculate aggregate detection probability considering:
+         * Emitter capabilities
+         * Own ship's EM signature
+         * Ranges and geometries
+       - Determine overall threat level for situation
+       - Identify which detected emitters can likely detect own ship
+    
+    4. **Risk Assessment**
+       - Overall Detection Risk: [LOW/MEDIUM/HIGH/CRITICAL]
+       - Probability Own Ship Detected: [Percentage]
+       - Primary Threats: [Top 2-3 emitters of concern]
+       - Tactical Implications: [Impact on mission/safety]
+    
+  agent: threat_assessment_agent
+  
+  context:
+    - signal_processing_task
+  
+  expected_output: >
+    A comprehensive threat assessment formatted as follows:
+    
+    ===================================================================
+    ELECTROMAGNETIC THREAT ASSESSMENT
+    ===================================================================
+    
+    OVERALL THREAT LEVEL: [🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM / 🟢 LOW]
+    DETECTION PROBABILITY: [Percentage]
+    
+    ===================================================================
+    INDIVIDUAL EMITTER THREAT ANALYSIS
+    ===================================================================
+    
+    Emitter E-001: Early Warning Radar
+      Threat Score: 85/100
+      Category: 🟠 HIGH
+      Detection Probability: 90%
+      Range to Emitter: 85 km
+      Recommended Action: Immediate emission control - reduce radar cross-section
+      
+      Analysis:
+      Long-range surveillance radar capable of detecting our ship at current
+      range. High probability we are already tracked. Reducing emissions will
+      decrease our signature but may not break existing track.
+    
+    Emitter E-002: Fire Control Radar
+      Threat Score: 95/100
+      Category: 🔴 CRITICAL
+      Detection Probability: 95%
+      Range to Emitter: 42 km
+      Recommended Action: Emergency stealth mode - prepare defensive countermeasures
+      
+      Analysis:
+      Active targeting radar indicates potential weapon engagement preparation.
+      Critical threat requiring immediate response. Own ship likely designated
+      as target of interest.
+    
+    [Continue for all emitters...]
+    
+    ===================================================================
+    OWN SHIP ELECTROMAGNETIC SIGNATURE
+    ===================================================================
+    
+    Active Emitters: 5
+    Systems: [List: radar, communications, datalink, etc.]
+    Signature Strength: MEDIUM
+    Detectability Range: ~65 km
+    
+    Assessment:
+    Our current electromagnetic signature makes us detectable by capable radars
+    at ranges up to 65 km. The following emitters can likely detect us:
+      • E-001 (Early Warning Radar) - 85 km range, 90% detection probability
+      • E-002 (Fire Control Radar) - 42 km range, 95% detection probability
+    
+    ===================================================================
+    AGGREGATE RISK ASSESSMENT
+    ===================================================================
+    
+    Detection Risk Level: 🟠 HIGH
+    
+    Probability Own Ship Currently Detected: 85-90%
+    
+    Primary Threat Emitters:
+    1. E-002 (Fire Control Radar) - CRITICAL - Active targeting
+    2. E-001 (Early Warning Radar) - HIGH - Long-range surveillance
+    
+    Tactical Implications:
+    • Own ship likely under surveillance by E-001
+    • E-002 indicates possible weapon engagement preparation
+    • Current EM signature facilitates continued tracking
+    • Emission reduction will complicate targeting but may not break track
+    
+    ===================================================================
+    RECOMMENDED PRIORITY ACTIONS
+    ===================================================================
+    
+    1. IMMEDIATE: Assess if stealth mode required (see EW Advisor recommendation)
+    2. Monitor E-002 fire control radar continuously for engagement indicators
+    3. Prepare defensive electronic countermeasures
+    4. Consider course changes to complicate tracking geometry
+    5. Alert combat systems to potential threat engagement
+    
+    ===================================================================
+  
+  output_file: output/threat_assessment_task.md
+
+ew_response_task:
+  description: >
+    MISSION: Recommend electronic warfare response based on threat assessment.
+    Determine if stealth mode activation is required and specify countermeasure approach.
+    
+    DECISION FRAMEWORK:
+    
+    1. **Analyze Threat Level**
+       - Review aggregate threat assessment
+       - Identify if any CRITICAL threats present
+       - Assess detection probability
+       - Consider tactical situation
+    
+    2. **Determine Response Posture**
+       
+       IF threat level CRITICAL OR detection probability >80%:
+         → RECOMMEND: Activate stealth mode immediately
+         → RATIONALE: High risk of targeting/engagement
+       
+       ELSE IF threat level HIGH OR detection probability 60-80%:
+         → RECOMMEND: Prepare for stealth mode, increase vigilance
+         → RATIONALE: Significant detection risk, standby for rapid response
+       
+       ELSE IF threat level MEDIUM:
+         → RECOMMEND: Enhanced EMCON, monitor situation
+         → RATIONALE: Moderate risk, increase readiness
+       
+       ELSE:
+         → RECOMMEND: Maintain current posture, continue monitoring
+         → RATIONALE: Low risk environment
+    
+    3. **Specify EW Measures**
+       - If stealth mode recommended:
+         * Specify which emitters to secure
+         * Recommend emission control level (EMCON Alpha/Bravo/Charlie)
+         * Identify essential systems that must remain active
+         * Suggest countermeasure preparations (chaff, decoys, jamming)
+       
+       - If NOT recommending stealth mode:
+         * Explain why current posture is acceptable
+         * Note what would trigger escalation to stealth mode
+         * Recommend continued monitoring parameters
+    
+    4. **Provide Tactical Guidance**
+       - Recommended ship maneuvers (if applicable)
+       - Communication security measures
+       - Sensor employment guidance
+       - Decision points for reassessment
+  
+  agent: electronic_warfare_advisor_agent
+  
+  context:
+    - threat_assessment_task
+  
+  expected_output: >
+    A tactical EW response recommendation formatted as follows:
+    
+    ===================================================================
+    ELECTRONIC WARFARE RESPONSE RECOMMENDATION
+    ===================================================================
+    
+    RECOMMENDED ACTION: [ACTIVATE STEALTH MODE / INCREASE READINESS / MAINTAIN POSTURE]
+    
+    THREAT JUSTIFICATION:
+    Current threat level: [CRITICAL/HIGH/MEDIUM/LOW]
+    Detection probability: [Percentage]
+    Primary concerns: [Top threat emitters]
+    
+    ===================================================================
+    DETAILED RECOMMENDATION
+    ===================================================================
+    
+    [IF STEALTH MODE RECOMMENDED:]
+    
+    **STEALTH MODE ACTIVATION REQUIRED**
+    
+    Rationale:
+    [Explain why stealth mode is necessary based on threat assessment]
+    
+    Emission Control Level: EMCON [Alpha/Bravo/Charlie]
+    
+    Systems to Secure:
+      • [Non-essential radar]
+      • [Non-essential communications]
+      • [Other high-signature emitters]
+    
+    Essential Systems to Maintain:
+      • [Critical command/control channels]
+      • [Minimum sensors for situational awareness]
+    
+    Countermeasure Preparation:
+      • Ready chaff/decoy systems
+      • Prepare active jamming (if threat escalates)
+      • Alert combat systems crew
+    
+    [OR IF NOT RECOMMENDING STEALTH MODE:]
+    
+    **CURRENT POSTURE ACCEPTABLE**
+    
+    Rationale:
+    [Explain why stealth mode not required - low threat, adequate distance, etc.]
+    
+    Monitoring Requirements:
+      • Continue tracking [specific emitters]
+      • Alert if [specific conditions change]
+      • Reassess if detection probability exceeds [threshold]
+    
+    Trigger Points for Stealth Mode:
+      • Detection of fire control radar activity
+      • Decrease in range to <[X] km
+      • New CRITICAL threats detected
+    
+    ===================================================================
+    TACTICAL GUIDANCE
+    ===================================================================
+    
+    Course/Speed Recommendations:
+    [Any suggested maneuvers to reduce detection or complicate tracking]
+    
+    Sensor Employment:
+    [Guidance on active vs passive sensors, radar usage]
+    
+    Communication Security:
+    [Recommend if comm reconfig needed - will trigger Comm Coordinator]
+    
+    ===================================================================
+    DECISION POINTS
+    ===================================================================
+    
+    Reassess situation if:
+      • [Condition 1]
+      • [Condition 2]
+      • [Condition 3]
+    
+    ===================================================================
+    BOTTOM LINE
+    ===================================================================
+    
+    [One-sentence summary: "Recommend immediate stealth mode activation due to 
+    fire control radar detection" OR "Maintain current posture, continue monitoring"]
+  
+  output_file: output/ew_response_task.md
+
+communication_reconfig_task:
+  description: >
+    MISSION: Execute communication system reconfiguration if stealth mode is recommended.
+    This task ONLY executes if the EW Advisor recommended activating stealth mode.
+    
+    CONDITIONAL EXECUTION:
+    
+    1. **Check EW Advisor Recommendation**
+       - Review the ew_response_task output
+       - IF recommendation is "ACTIVATE STEALTH MODE": Proceed with reconfiguration
+       - IF recommendation is "MAINTAIN POSTURE": Report no changes made
+    
+    2. **Execute Communications Reconfiguration** (if stealth mode required)
+       - Use Communications Reconfiguration Tool
+       - Set stealth_mode = True
+       - Pass threat_level from threat assessment
+       - Allow tool to determine priority channels based on threat
+    
+    3. **Report Configuration Changes**
+       - Document which channels were modified
+       - Report encryption and frequency hopping status
+       - Confirm connectivity to essential command channels
+       - Note any operational impacts
+    
+    4. **Coordination Guidance**
+       - Remind to coordinate frequency changes with task force
+       - Note crypto key update requirements
+       - Identify backup communication procedures
+  
+  agent: communication_coordinator_agent
+  
+  context:
+    - threat_assessment_task
+    - ew_response_task
+  
+  expected_output: >
+    A communication reconfiguration report formatted as follows:
+    
+    ===================================================================
+    COMMUNICATIONS RECONFIGURATION REPORT
+    ===================================================================
+    
+    [IF STEALTH MODE ACTIVATED:]
+    
+    STEALTH MODE: ACTIVE
+    Threat Level: [CRITICAL/HIGH/MEDIUM/LOW]
+    Reconfiguration Completed: [Timestamp]
+    
+    CHANGES IMPLEMENTED:
+      ✓ Frequency hopping enabled on all priority channels
+      ✓ Enhanced encryption activated
+      ✓ Power reduction applied (if threat CRITICAL/HIGH)
+      ✓ Non-essential channels secured
+    
+    ACTIVE COMMUNICATION CHANNELS:
+      • SATCOM Primary: 7500-8500 MHz - OPERATIONAL
+      • UHF Tactical: 225-400 MHz - OPERATIONAL (if threat ≤HIGH)
+      • Datalink Command: 960-1215 MHz - OPERATIONAL
+      [Additional channels based on threat level]
+    
+    SECURED CHANNELS:
+      • VHF Primary: SECURED
+      • HF Long Range: SECURED
+      [Channels turned off to reduce signature]
+    
+    OPERATIONAL IMPACT:
+      • Command and control: MAINTAINED
+      • Tactical coordination: [MAINTAINED / LIMITED based on threat]
+      • Long-range communications: [MAINTAINED / SECURED based on threat]
+    
+    COORDINATION ACTIONS REQUIRED:
+      ☐ Notify task force of frequency changes
+      ☐ Update crypto keys per EMCON procedures
+      ☐ Confirm backup comm procedures with adjacent units
+      ☐ Test priority channel connectivity
+    
+    [OR IF NO RECONFIGURATION NEEDED:]
+    
+    STEALTH MODE: NOT ACTIVATED
+    
+    Reason: EW Advisor did not recommend stealth mode activation.
+    Current threat level does not require communication restrictions.
+    
+    All standard communication channels remain operational in normal configuration.
+    
+    ===================================================================
+  
+  output_file: output/communication_reconfig_task.md
