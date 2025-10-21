@@ -121,7 +121,7 @@ Open your browser to `http://localhost:7860`. This interface features predefined
 Run an assessment programmatically with:
 
 ```bash
-uv run python src/main.py
+uv run python -m src.main  # Execute as a module
 ```
 
 <!-- tree -I "__init__.py|susceptibility_agent_v1.egg-info|uv.lock|README.md|__pycache__"  -->
