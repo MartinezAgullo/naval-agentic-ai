@@ -2,7 +2,8 @@
 Susceptibility Crew Definition
 Defines the AI agents and tasks for naval electromagnetic threat assessment
 """
-
+import os
+from pathlib import Path
 from typing import List
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
@@ -23,12 +24,38 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+# Get absolute path to config directory
+SCRIPT_DIR = Path(__file__).parent  # /path/to/src/
+PROJECT_ROOT = SCRIPT_DIR.parent    # /path/to/project/
+CONFIG_DIR = PROJECT_ROOT / 'config'
+
+# DEBUG: Print resolved paths
+print("=" * 70)
+print("DEBUG: Path Resolution")
+print("=" * 70)
+print(f"__file__: {__file__}")
+print(f"SCRIPT_DIR: {SCRIPT_DIR}")
+print(f"PROJECT_ROOT: {PROJECT_ROOT}")
+print(f"CONFIG_DIR: {CONFIG_DIR}")
+print(f"agents.yaml exists: {(CONFIG_DIR / 'agents.yaml').exists()}")
+print(f"tasks.yaml exists: {(CONFIG_DIR / 'tasks.yaml').exists()}")
+print(f"agents.yaml path: {CONFIG_DIR / 'agents.yaml'}")
+print(f"tasks.yaml path: {CONFIG_DIR / 'tasks.yaml'}")
+print("=" * 70)
+
+logger.debug(f"Config directory resolved to: {CONFIG_DIR}")
+logger.debug(f"Agents config: {CONFIG_DIR / 'agents.yaml'}")
+logger.debug(f"Tasks config: {CONFIG_DIR / 'tasks.yaml'}")
+
+
+
 @CrewBase
 class SusceptibilityCrew:
     """Naval Susceptibility Assessment Crew - Electronic Warfare Threat Analysis"""
     
-    agents_config = 'config/agents.yaml'
-    tasks_config = 'config/tasks.yaml'
+    # Use absolute paths
+    agents_config = str(CONFIG_DIR / 'agents.yaml')
+    tasks_config = str(CONFIG_DIR / 'tasks.yaml')
     
     def __init__(self):
         super().__init__()

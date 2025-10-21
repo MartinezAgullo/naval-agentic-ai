@@ -1,14 +1,9 @@
 """
 Communications Reconfiguration Tool
 Simulates communication system reconfiguration for stealth mode operations.
-
-Does:
-    1 - If stealth_mode=False → Returns "normal mode" message
-    2 - If stealth_mode=True → Calls _perform_reconfiguration()
-    3 - Returns formatted report
 """
 
-from typing import Type, List, Optional
+from typing import Type, List, Optional, Dict, Tuple, ClassVar
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -43,8 +38,8 @@ class CommunicationsReconfigTool(BaseTool):
     )
     args_schema: Type[BaseModel] = CommsReconfigInput
     
-    # Standard communication channels
-    STANDARD_CHANNELS = [
+    # Standard communication channels - ClassVar to avoid Pydantic validation
+    STANDARD_CHANNELS: ClassVar[List[str]] = [
         "VHF_Primary",
         "UHF_Tactical",
         "HF_LongRange",
@@ -53,8 +48,8 @@ class CommunicationsReconfigTool(BaseTool):
         "ESM_Coordination"
     ]
     
-    # Frequency bands (MHz)
-    FREQUENCY_BANDS = {
+    # Frequency bands (MHz) - ClassVar to avoid Pydantic validation
+    FREQUENCY_BANDS: ClassVar[Dict[str, Tuple[int, int]]] = {
         "VHF_Primary": (30, 88),
         "UHF_Tactical": (225, 400),
         "HF_LongRange": (2, 30),
@@ -156,21 +151,21 @@ class CommunicationsReconfigTool(BaseTool):
     def _format_normal_mode(self) -> str:
         """Format response for normal communications mode"""
         return """
-        =" * 70
-        COMMUNICATIONS STATUS: NORMAL MODE
-        =" * 70
-        
-        All communication channels operating in standard configuration.
-        No emission control restrictions active.
-        
-        Active Channels: 6/6
-        Encryption: Basic
-        Power Levels: Normal
-        Frequency Hopping: Disabled
-        
-        ⚠️ NOTE: Standard emissions profile maintained
-        =" * 70
-        """
+=" * 70
+COMMUNICATIONS STATUS: NORMAL MODE
+=" * 70
+
+All communication channels operating in standard configuration.
+No emission control restrictions active.
+
+Active Channels: 6/6
+Encryption: Basic
+Power Levels: Normal
+Frequency Hopping: Disabled
+
+NOTE: Standard emissions profile maintained
+=" * 70
+"""
     
     def _format_stealth_config(self, config: dict, threat_level: str) -> str:
         """Format stealth mode reconfiguration report"""
@@ -180,20 +175,11 @@ class CommunicationsReconfigTool(BaseTool):
         power_red = config['power_reduced']
         encryption = config['encryption_level']
         
-        # Threat level indicator
-        threat_indicators = {
-            'low': '🟢',
-            'medium': '🟡',
-            'high': '🟠',
-            'critical': '🔴'
-        }
-        threat_icon = threat_indicators.get(threat_level, '⚪')
-        
         response_lines = [
             "=" * 70,
             "COMMUNICATIONS RECONFIGURATION - STEALTH MODE ACTIVE",
             "=" * 70,
-            f"Threat Level: {threat_icon} {threat_level.upper()}",
+            f"Threat Level: {threat_level.upper()}",
             f"Channels Reconfigured: {len(channels)}/{len(self.STANDARD_CHANNELS)}",
             "",
             "STEALTH CONFIGURATION:",
@@ -220,7 +206,7 @@ class CommunicationsReconfigTool(BaseTool):
         
         if threat_level == "critical":
             response_lines.extend([
-                "  🔴 CRITICAL THREAT - Minimal emissions authorized",
+                "  CRITICAL THREAT - Minimal emissions authorized",
                 "  → Only essential command/control channels active",
                 "  → All non-priority communications SECURED",
                 "  → Maximum encryption and frequency agility employed",
@@ -228,7 +214,7 @@ class CommunicationsReconfigTool(BaseTool):
             ])
         elif threat_level == "high":
             response_lines.extend([
-                "  🟠 HIGH THREAT - Tactical communications maintained",
+                "  HIGH THREAT - Tactical communications maintained",
                 "  → Non-essential channels SECURED",
                 "  → Frequency hopping active on all channels",
                 "  → Reduced power to minimize detection",
@@ -236,7 +222,7 @@ class CommunicationsReconfigTool(BaseTool):
             ])
         elif threat_level == "medium":
             response_lines.extend([
-                "  🟡 MEDIUM THREAT - Balanced stealth configuration",
+                "  MEDIUM THREAT - Balanced stealth configuration",
                 "  → Primary channels remain operational",
                 "  → Frequency hopping provides protection",
                 "  → Normal power levels maintained",
@@ -244,7 +230,7 @@ class CommunicationsReconfigTool(BaseTool):
             ])
         else:
             response_lines.extend([
-                "  🟢 LOW THREAT - Stealth enhancements applied",
+                "  LOW THREAT - Stealth enhancements applied",
                 "  → All standard channels operational",
                 "  → Basic stealth measures implemented",
                 "  → Communications capability maintained"

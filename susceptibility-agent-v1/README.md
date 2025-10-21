@@ -8,6 +8,45 @@ An agentic AI system that analyzes electromagnetic signals from naval sensors, a
 
 This system processes radar and Electronic Warfare (EW) sensor data to help ships prevent detection by hostile forces.
 
+```bash
+susceptibility-agent-v1/
+├── config/
+│   ├── agents.yaml              # 4 agent definitions (signal, threat, EW, comms)
+│   ├── tasks.yaml               # 4 sequential task definitions
+│   └── threat_database.json     # 13 emitter types with threat scores
+│
+├── data/
+│   └── sample_signals/          # Test signal data (JSON format)
+│
+├── logs/                        # Application logs (auto-generated)
+│
+├── output/                      # Generated assessment reports (auto-generated)
+│
+├── src/
+│   ├── crew.py                  # CrewAI crew definition (@CrewBase)
+│   ├── main.py                  # Public API and CLI entry point
+│   │
+│   ├── models/
+│   │   └── signal_data.py       # Pydantic models for signal data
+│   │
+│   ├── tools/                   # Agent tools (8 total)
+│   │   ├── multimodal_tools.py  # Signal processors + legacy tools
+│   │   ├── emitter_threat_tool.py    # Threat database lookup
+│   │   ├── em_signature_tool.py      # EM signature calculator
+│   │   ├── comms_reconfig_tool.py    # Communication reconfiguration
+│   │   ├── exif_tools.py        # EXIF metadata extraction (preserved)
+│   │   └── location_tools.py    # Geographic context (preserved)
+│   │
+│   └── utils/
+│       └── logger.py            # Centralized logging (Python stdlib)
+│
+├── gradio_susceptibility_v1_app.py   # Web interface (uses main.py API)
+│
+├── pyproject.toml               # UV dependencies and project metadata
+├── .env.example                 # Environment variables template
+└── README.md                    # This file
+```
+
 -----
 
 ## AI Agents
@@ -40,10 +79,9 @@ This project leverages the **CrewAI framework** and reuses components from the [
   * `location_tools.py`
 
 **New Specific Tools:**
-
-  * `emitter_threat_tool.py`: Used to look up emitter threats.
-  * `em_signature_tool.py`: Used to calculate the ship's electromagnetic (EM) signature.
   * `comms_reconfig_tool.py`: Used to simulate communication system changes.
+* `em_signature_tool.py`: Used to calculate the ship's electromagnetic (EM) signature.
+  * `emitter_threat_tool`: Queries threat database to assess risk level of detected electromagnetic emitters.
 
 -----
 
@@ -83,5 +121,8 @@ Open your browser to `http://localhost:7860`. This interface features predefined
 Run an assessment programmatically with:
 
 ```bash
-python src/main.py
+uv run python src/main.py
 ```
+
+<!-- tree -I "__init__.py|susceptibility_agent_v1.egg-info|uv.lock|README.md|__pycache__"  -->
+

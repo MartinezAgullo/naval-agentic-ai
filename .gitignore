@@ -1,5 +1,7 @@
 # Python
 __pycache__/
+*/__pycache__
+*/*/__pycache__
 *.py[cod]
 *$py.class
 *.so
@@ -37,6 +39,8 @@ venv.bak/
 *.swo
 *~
 .DS_Store
+*/.DS_Store
+
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -107,3 +111,6 @@ coverage.xml
 # Documentation
 docs/_build/
 site/
+
+
+*/*/*.egg-info

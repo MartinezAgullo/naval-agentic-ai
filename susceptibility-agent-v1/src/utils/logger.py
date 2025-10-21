@@ -3,6 +3,7 @@ Centralized logging configuration using Python's standard logging library.
 Provides hierarchical loggers for different modules with file and console handlers.
 """
 
+import os
 import logging
 import sys
 from pathlib import Path
@@ -15,7 +16,7 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 
 def setup_logging(
-    level: str = "DEBUG",
+    level: Optional[str] = None,
     log_file: Optional[str] = "susceptibility_agent.log",
     console_level: Optional[str] = None
 ) -> None:
@@ -24,11 +25,16 @@ def setup_logging(
     
     Args:
         level: Default logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+               If None, reads from LOG_LEVEL environment variable (default: INFO)
         log_file: Name of the log file (placed in logs/ directory)
         console_level: Console logging level (defaults to same as level)
     """
+    # Read from environment variable if not specified
+    if level is None:
+        level = os.getenv("LOG_LEVEL", "INFO").upper()
+    
     # Convert string level to logging constant
-    numeric_level = getattr(logging, level.upper(), logging.DEBUG)
+    numeric_level = getattr(logging, level.upper(), logging.INFO)
     console_numeric_level = getattr(logging, console_level.upper(), numeric_level) if console_level else numeric_level
     
     # Root logger configuration
@@ -63,13 +69,18 @@ def setup_logging(
         file_handler.setFormatter(file_formatter)
         root_logger.addHandler(file_handler)
     
-    # Silence noisy third-party loggers
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-    logging.getLogger("openai").setLevel(logging.WARNING)
-    logging.getLogger("anthropic").setLevel(logging.WARNING)
+    # Configure third-party loggers based on main LOG_LEVEL
+    third_party_level = logging.WARNING if numeric_level >= logging.INFO else logging.INFO
     
-    root_logger.info(f"Logging initialized - Console: {console_level or level}, File: {level}")
+    logging.getLogger("httpx").setLevel(third_party_level)
+    logging.getLogger("httpcore").setLevel(third_party_level)
+    logging.getLogger("openai").setLevel(third_party_level)
+    logging.getLogger("anthropic").setLevel(third_party_level)
+    logging.getLogger("urllib3").setLevel(third_party_level)
+    logging.getLogger("LiteLLM").setLevel(third_party_level)
+    
+    root_logger.info(f"Logging initialized - Console: {level}, File: {level}")
+    root_logger.debug(f"Third-party loggers set to: {logging.getLevelName(third_party_level)}")
 
 
 def get_logger(name: str) -> logging.Logger:
