@@ -114,6 +114,3 @@ site/
 
 
 */*/*.egg-info
-
-pyproject.toml
-*/pyproject.toml
