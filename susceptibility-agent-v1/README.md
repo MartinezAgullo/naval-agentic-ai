@@ -2,6 +2,7 @@
 
 An agentic AI system that analyzes electromagnetic signals from naval sensors, assesses threat levels, and recommends tactical responses to minimize detection risk. This project focuses on **Susceptibility**—avoiding being attacked or detected.
 
+Part 1 of a 3-project naval AI series.
 -----
 
 ## Project Overview
@@ -80,7 +81,7 @@ This project leverages the **CrewAI framework** and reuses components from the [
 
 **New Specific Tools:**
   * `comms_reconfig_tool.py`: Used to simulate communication system changes.
-* `em_signature_tool.py`: Used to calculate the ship's electromagnetic (EM) signature.
+  * `em_signature_tool.py`: Used to calculate the ship's electromagnetic (EM) signature.
   * `emitter_threat_tool`: Queries threat database to assess risk level of detected electromagnetic emitters.
 
 -----
@@ -102,12 +103,13 @@ This project leverages the **CrewAI framework** and reuses components from the [
 
 -----
 
-## Usage (Summarized)
+## Usage
 
 The assessment can be run via an interactive web interface or the command line.
 
-### Gradio Web Interface (Recommended for Demos)
+### Gradio Web Interface
 
+Recomended for demos.
 Launch the interface with:
 
 ```bash
@@ -123,6 +125,12 @@ Run an assessment programmatically with:
 ```bash
 uv run python -m src.main  # Execute as a module
 ```
+---
+
+
+**Susceptibility Agent** - Minimizing naval vessel detection through intelligent electromagnetic signature management.
+
+*Part of the Naval Agentic AI Research Series*
 
 <!-- tree -I "__init__.py|susceptibility_agent_v1.egg-info|uv.lock|README.md|__pycache__"  -->
 

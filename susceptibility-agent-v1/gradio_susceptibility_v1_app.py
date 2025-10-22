@@ -312,10 +312,10 @@ def create_gradio_interface():
     # Create output directory
     Path("output").mkdir(exist_ok=True)
     
-    with gr.Blocks(title="Susceptibility Agent v1", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Susceptibility Agent", theme=gr.themes.Soft()) as demo:
         
         gr.Markdown("""
-        # 🛥️ Naval Susceptibility Agent v1
+        # 🛥️ Naval Susceptibility Agent
         ## Electromagnetic Warfare Threat Assessment System
         
         This system analyzes electromagnetic signals detected by ship sensors and assesses the threat level to own ship.
