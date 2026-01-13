@@ -168,73 +168,127 @@ def parse_active_systems(systems_text: str) -> List[str]:
 
 def convert_to_markdown(text: str) -> str:
     """
-    Convert plain text report to beautiful Markdown format.
+    Convert plain text report to clean, structured Markdown format.
     
-    Handles:
-    - === headers → ## Markdown headers
-    - --- subheaders → ### Markdown subheaders
-    - Bullet points
-    - Bold key terms
-    - Emojis and formatting
+    Handles the specific format from CrewAI agent outputs:
+    - === HEADER === lines → ## Headers
+    - [SECTION NAME] lines → ### Sections  
+    - Key: Value pairs → **Key:** Value
+    - Indented data blocks → Proper formatting
+    - Checkboxes and bullets → Clean lists
     """
     if not text or text.strip() == "":
         return "*No data available*"
     
     lines = text.split('\n')
     markdown_lines = []
+    in_emitter_block = False
     
     for line in lines:
         stripped = line.strip()
         
-        # Skip empty lines (but preserve them for spacing)
+        # Skip pure separator lines (only = or -)
+        if stripped and all(c == '=' for c in stripped):
+            continue
+        if stripped and all(c == '-' for c in stripped):
+            markdown_lines.append("")  # Add spacing instead
+            continue
+        
+        # Empty lines - preserve for spacing
         if not stripped:
             markdown_lines.append("")
             continue
         
-        # Main headers (=== wrapped)
-        if stripped.startswith('===') and stripped.endswith('==='):
-            # Extract title between ===
+        # Main headers: === TITLE === or lines with title wrapped in ===
+        if '===' in stripped:
+            # Extract text between === markers
             title = stripped.replace('=', '').strip()
             if title:
-                markdown_lines.append(f"## {title}")
+                markdown_lines.append(f"\n## {title}\n")
+                in_emitter_block = False
             continue
         
-        # Sub-headers (--- wrapped or just ---)
-        if stripped.startswith('---') and stripped.endswith('---'):
-            title = stripped.replace('-', '').strip()
-            if title:
-                markdown_lines.append(f"### {title}")
+        # Section headers: [SECTION NAME] or [SECTION NAME] ----
+        if stripped.startswith('[') and ']' in stripped:
+            # Extract section name
+            section_end = stripped.index(']')
+            section_name = stripped[1:section_end]
+            remainder = stripped[section_end + 1:].replace('-', '').strip()
+            
+            markdown_lines.append(f"\n### {section_name}\n")
+            if remainder and remainder not in ['...', '[None detected...]']:
+                markdown_lines.append(remainder)
+            in_emitter_block = True
             continue
         
-        if stripped.startswith('---'):
-            markdown_lines.append("---")  # Horizontal rule
+        # Skip [None detected...] type messages but show them nicely
+        if stripped in ['[None detected...]', '[None]', '[None identified as critical]']:
+            markdown_lines.append(f"*{stripped[1:-1] if stripped.startswith('[') else stripped}*")
             continue
         
-        # Section headers (ALL CAPS followed by colon)
-        if ':' in stripped and stripped.split(':')[0].isupper():
+        # Emitter ID lines - make them stand out
+        if stripped.startswith('Emitter ID:'):
+            emitter_id = stripped.split(':', 1)[1].strip()
+            markdown_lines.append(f"\n**🎯 Emitter {emitter_id}**\n")
+            continue
+        
+        # Checkboxes: ☐ or ✓
+        if stripped.startswith('☐ '):
+            markdown_lines.append(f"- [ ] {stripped[2:]}")
+            continue
+        if stripped.startswith('✓ '):
+            markdown_lines.append(f"- [x] {stripped[2:]}")
+            continue
+        
+        # Bullet points with various markers
+        if stripped.startswith('• '):
+            markdown_lines.append(f"- {stripped[2:]}")
+            continue
+        
+        # Indented key-value pairs (emitter details)
+        if line.startswith('  ') and ':' in stripped:
             parts = stripped.split(':', 1)
-            if len(parts[0].split()) <= 4:  # Short uppercase phrase
-                markdown_lines.append(f"### {parts[0]}")
-                if len(parts) > 1 and parts[1].strip():
-                    markdown_lines.append(parts[1].strip())
+            if len(parts) == 2:
+                key = parts[0].strip()
+                value = parts[1].strip()
+                if value:
+                    markdown_lines.append(f"  - **{key}:** {value}")
+                else:
+                    markdown_lines.append(f"  - **{key}**")
                 continue
         
-        # Bullet points (•, -, *, →, ☐, ✓)
-        if stripped.startswith(('• ', '- ', '* ', '→ ', '☐ ', '✓ ')):
-            markdown_lines.append(line)  # Keep as is
-            continue
-        
-        # Key-value pairs (bold the key)
+        # Top-level key-value pairs
         if ':' in stripped and not stripped.startswith(' '):
             parts = stripped.split(':', 1)
-            if len(parts) == 2 and len(parts[0]) < 50:  # Reasonable key length
-                markdown_lines.append(f"**{parts[0]}:** {parts[1].strip()}")
+            if len(parts) == 2 and len(parts[0]) < 40:
+                key = parts[0].strip()
+                value = parts[1].strip()
+                # Special formatting for status values
+                if value.upper() in ['ACTIVE', 'OPERATIONAL', 'MAINTAINED', 'EXCELLENT']:
+                    markdown_lines.append(f"**{key}:** `{value}` ✅")
+                elif value.upper() in ['SECURED', 'REDUCED', 'LIMITED']:
+                    markdown_lines.append(f"**{key}:** `{value}` 🔒")
+                elif value.upper() in ['HIGH', 'CRITICAL']:
+                    markdown_lines.append(f"**{key}:** `{value}` ⚠️")
+                elif value.upper() in ['MEDIUM']:
+                    markdown_lines.append(f"**{key}:** `{value}` 🟡")
+                elif value.upper() in ['LOW']:
+                    markdown_lines.append(f"**{key}:** `{value}` 🟢")
+                elif value:
+                    markdown_lines.append(f"**{key}:** {value}")
+                else:
+                    markdown_lines.append(f"**{key}**")
                 continue
         
-        # Preserve emojis and special formatting
-        markdown_lines.append(line)
+        # Regular text - just add it
+        markdown_lines.append(stripped)
     
-    return '\n'.join(markdown_lines)
+    # Clean up excessive blank lines
+    result = '\n'.join(markdown_lines)
+    while '\n\n\n' in result:
+        result = result.replace('\n\n\n', '\n\n')
+    
+    return result.strip()
 
 
 def read_output_file(file_path: str) -> str:
@@ -315,7 +369,107 @@ def create_gradio_interface():
     # Create output directory
     Path("output").mkdir(exist_ok=True)
     
-    with gr.Blocks(title="Susceptibility Agent", theme=gr.themes.Soft()) as demo:
+    # Custom CSS for military-modern aesthetic
+    custom_css = """
+    /* Main container styling */
+    .gradio-container {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+    }
+    
+    /* Report container styling */
+    .report-container {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid #0f3460;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 10px 0;
+    }
+    
+    /* Markdown content in tabs */
+    .prose {
+        max-width: none !important;
+    }
+    
+    .prose h2 {
+        color: #00d4ff !important;
+        border-bottom: 2px solid #0f3460;
+        padding-bottom: 8px;
+        margin-top: 24px !important;
+        font-size: 1.4em !important;
+        font-weight: 600 !important;
+    }
+    
+    .prose h3 {
+        color: #7dd3fc !important;
+        margin-top: 20px !important;
+        font-size: 1.15em !important;
+        font-weight: 500 !important;
+    }
+    
+    .prose strong {
+        color: #e0f2fe !important;
+    }
+    
+    .prose code {
+        background: #1e3a5f !important;
+        color: #4ade80 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.9em !important;
+    }
+    
+    .prose ul {
+        margin-left: 16px !important;
+    }
+    
+    .prose li {
+        margin: 4px 0 !important;
+    }
+    
+    /* Tab styling */
+    .tab-nav button {
+        font-weight: 500 !important;
+    }
+    
+    .tab-nav button.selected {
+        border-bottom: 3px solid #00d4ff !important;
+    }
+    
+    /* Status box styling */
+    #status-box textarea {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    }
+    """
+    
+    with gr.Blocks(
+        title="Susceptibility Agent", 
+        theme=gr.themes.Base(
+            primary_hue="cyan",
+            secondary_hue="slate",
+            neutral_hue="slate",
+            font=gr.themes.GoogleFont("Inter")
+        ).set(
+            body_background_fill="#0f172a",
+            body_background_fill_dark="#0f172a",
+            body_text_color="#e2e8f0",
+            body_text_color_dark="#e2e8f0",
+            block_background_fill="#1e293b",
+            block_background_fill_dark="#1e293b",
+            block_border_color="#334155",
+            block_border_color_dark="#334155",
+            block_label_text_color="#94a3b8",
+            block_label_text_color_dark="#94a3b8",
+            input_background_fill="#0f172a",
+            input_background_fill_dark="#0f172a",
+            input_border_color="#334155",
+            input_border_color_dark="#334155",
+            button_primary_background_fill="#0891b2",
+            button_primary_background_fill_dark="#0891b2",
+            button_primary_background_fill_hover="#06b6d4",
+            button_primary_background_fill_hover_dark="#06b6d4",
+        ),
+        css=custom_css
+    ) as demo:
         
         gr.Markdown("""
         # 🛥️ Naval Susceptibility Agent
@@ -366,34 +520,35 @@ def create_gradio_interface():
         status_output = gr.Textbox(
             label="Status",
             lines=3,
-            interactive=False
+            interactive=False,
+            elem_id="status-box"
         )
         
         gr.Markdown("### 📊 Assessment Reports")
         
-        with gr.Tabs():
-            with gr.Tab("📡 Signal Intelligence"):
+        with gr.Tabs() as tabs:
+            with gr.Tab("📡 Signal Intelligence", id="signal"):
                 signal_output = gr.Markdown(
-                    label="Signal Processing Report",
-                    value="Run an assessment to see results..."
+                    value="*Run an assessment to see results...*",
+                    elem_classes=["report-content"]
                 )
             
-            with gr.Tab("⚠️ Threat Assessment"):
+            with gr.Tab("⚠️ Threat Assessment", id="threat"):
                 threat_output = gr.Markdown(
-                    label="Threat Assessment Report",
-                    value="Run an assessment to see results..."
+                    value="*Run an assessment to see results...*",
+                    elem_classes=["report-content"]
                 )
             
-            with gr.Tab("🛡️ EW Response"):
+            with gr.Tab("🛡️ EW Response", id="ew"):
                 ew_output = gr.Markdown(
-                    label="Electronic Warfare Response",
-                    value="Run an assessment to see results..."
+                    value="*Run an assessment to see results...*",
+                    elem_classes=["report-content"]
                 )
             
-            with gr.Tab("📞 Communications"):
+            with gr.Tab("📞 Communications", id="comms"):
                 comm_output = gr.Markdown(
-                    label="Communication Reconfiguration",
-                    value="Run an assessment to see results..."
+                    value="*Run an assessment to see results...*",
+                    elem_classes=["report-content"]
                 )
         
         gr.Markdown("""
@@ -441,17 +596,21 @@ def create_gradio_interface():
     
     return demo
 
-
 if __name__ == "__main__":
     logger.info("Starting Gradio Susceptibility Agent v1 Interface")
     
     demo = create_gradio_interface()
     
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=False,
-        show_error=True
-    )
-    
-    logger.info("Gradio interface stopped")
+    try:
+        demo.launch(
+            server_name="0.0.0.0",
+            server_port=7860,
+            share=False,
+            show_error=True
+        )
+    except KeyboardInterrupt:
+        pass  # Silently handle Ctrl+C
+    finally:
+        logger.info("="*50)
+        logger.info("🛥️  Susceptibility Agent stopped gracefully")
+        logger.info("="*50)
