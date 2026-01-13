@@ -1,11 +1,32 @@
-## Susceptibility Agent v1: Naval Electronic Warfare Susceptibility Analysis
+## Susceptibility Agent
 
-An agentic AI system that analyzes electromagnetic signals from naval sensors, assesses threat levels, and recommends tactical responses to minimize detection risk. This project focuses on **Susceptibility**—avoiding being attacked or detected.
+**Naval Electronic Warfare Susceptibility Analysis**
 
+An agentic AI system that analyzes electromagnetic signals from naval sensors, assesses threat levels, and recommends tactical responses to minimize detection risk. 
+<!-- This project focuses on **Susceptibility**—avoiding being attacked or detected. -->
 Part 1 of a 3-project naval AI series.
 -----
 
 ## Project Overview
+
+The system uses 4 specialized agents working sequentially to perform the analysis:
+
+1.  **Signal Intelligence Agent**
+      * Processes radar/ESM/ELINT sensor data.
+      * Classifies detected electromagnetic emitters and extracts technical parameters (frequency, power, bearing, range).
+2.  **Threat Assessment Agent**
+      * Queries a threat database for emitter capabilities.
+      * Calculates detection probability, assigns threat scores (0-100), and categorizes threats (LOW/MEDIUM/HIGH/CRITICAL).
+3.  **Electronic Warfare Advisor Agent**
+      * Recommends tactical EW responses based on the threat level.
+      * Advises on stealth mode activation and suggests Emission Control (EMCON) procedures and countermeasures.
+4.  **Communication Coordinator Agent**
+      * Executes communication system reconfigurations and implements EMCON procedures when stealth mode is activated.
+      * Manages frequency hopping and encryption upgrades to maintain critical command/control connectivity.
+
+-----
+
+## Project Structure
 
 This system processes radar and Electronic Warfare (EW) sensor data to help ships prevent detection by hostile forces.
 
@@ -43,29 +64,10 @@ susceptibility-agent-v1/
 │
 ├── gradio_susceptibility_v1_app.py   # Web interface (uses main.py API)
 │
-├── pyproject.toml               # UV dependencies and project metadata
+├── pyproject.toml               # UV dependencies
 ├── .env.example                 # Environment variables template
-└── README.md                    # This file
+└── README.md                    
 ```
-
------
-
-## AI Agents
-
-The system uses 4 specialized agents working sequentially to perform the analysis:
-
-1.  **Signal Intelligence Agent**
-      * Processes radar/ESM/ELINT sensor data.
-      * Classifies detected electromagnetic emitters and extracts technical parameters (frequency, power, bearing, range).
-2.  **Threat Assessment Agent**
-      * Queries a threat database for emitter capabilities.
-      * Calculates detection probability, assigns threat scores (0-100), and categorizes threats (LOW/MEDIUM/HIGH/CRITICAL).
-3.  **Electronic Warfare Advisor Agent**
-      * Recommends tactical EW responses based on the threat level.
-      * Advises on stealth mode activation and suggests Emission Control (EMCON) procedures and countermeasures.
-4.  **Communication Coordinator Agent**
-      * Executes communication system reconfigurations and implements EMCON procedures when stealth mode is activated.
-      * Manages frequency hopping and encryption upgrades to maintain critical command/control connectivity.
 
 -----
 
@@ -125,8 +127,8 @@ Run an assessment programmatically with:
 ```bash
 uv run python -m src.main  # Execute as a module
 ```
----
 
+---
 
 **Susceptibility Agent** - Minimizing naval vessel detection through intelligent electromagnetic signature management.
 
