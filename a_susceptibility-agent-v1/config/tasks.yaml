@@ -271,6 +271,11 @@ ew_response_task:
        - Communication security measures
        - Sensor employment guidance
        - Decision points for reassessment
+       
+    Specify technical countermeasure preparations:
+    - For Radar Threats: Suggest Noise Jamming (Spot/Barrage) or DRFM Deception (RGPO/VGPO).
+    - For Terminal Guidance: Recommend Expendables (Chaff clouds, Active Decoys, or Towed Decoys).
+    - For IR Threats: Recommend Flare patterns or Laser Dazzlers.
   
   agent: electronic_warfare_advisor_agent
   

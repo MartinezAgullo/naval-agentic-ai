@@ -115,7 +115,7 @@ Recomended for demos.
 Launch the interface with:
 
 ```bash
-python gradio_susceptibility_v1_app.py
+uv run python gradio_susceptibility_v1_app.py
 ```
 
 Open your browser to `http://localhost:7860`. This interface features predefined scenarios, real-time progress, and detailed reports.
