@@ -130,6 +130,10 @@ uv run python -m src.main  # Execute as a module
 
 ---
 
+![frontal_a](https://github.com/MartinezAgullo/naval-agentic-ai/blob/main/a_susceptibility-agent-v1/data/frontal_susceptibility_agent.png)
+
+---
+
 **Susceptibility Agent** - Minimizing naval vessel detection through intelligent electromagnetic signature management.
 
 *Part of the Naval Agentic AI Research Series*

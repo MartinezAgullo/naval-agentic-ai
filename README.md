@@ -18,3 +18,5 @@ Agentic system for **post-impact recovery**. Diagnoses failures, prioritizes cri
 
 **Agents**: Diagnostics → AI Prioritizer → Communications Router → Maintenance Automation
 
+
+![frontal](https://github.com/MartinezAgullo/naval-agentic-ai/blob/main/a_susceptibility-agent-v1/data/frontal_mix.png)
