@@ -115,3 +115,5 @@ site/
 
 */*/*.egg-info
 Esquemas
+RESUMEN_PROYECTO.md
+yolov8n.pt

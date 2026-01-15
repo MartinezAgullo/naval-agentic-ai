@@ -1,0 +1,58 @@
+{
+  "scenario_id": "SCENARIO_001",
+  "scenario_name": "Drone Swarm Approach",
+  "timestamp": "2025-01-15T10:25:00Z",
+  "location": {
+    "ship_lat": 36.5,
+    "ship_lon": -6.3,
+    "area": "Gibraltar Strait"
+  },
+  "description": "Multiple small drones detected approaching from bearing 045, estimated range 2-3 km. Visual confirmation from EO/IR cameras. Radar traces show Doppler signatures consistent with rotating propellers.",
+  
+  "visual_data": {
+    "images": [
+      "data/sample_threats/drone_hexacopter_001.jpg",
+      "data/sample_threats/drone_hexacopter_002.jpg",
+      "data/sample_threats/drone_swarm_003.jpg"
+    ],
+    "camera_id": "EOIR-01",
+    "sensor_location": "forward_mast"
+  },
+  
+  "radar_data": {
+    "traces": [
+      {
+        "timestamp": "2025-01-15T10:25:00Z",
+        "range_km": 2.5,
+        "bearing_degrees": 45,
+        "elevation_degrees": 15,
+        "velocity_mps": 12,
+        "rcs_dbsm": -15,
+        "doppler_frequency_hz": 45,
+        "band": "Ku"
+      },
+      {
+        "timestamp": "2025-01-15T10:25:01Z",
+        "range_km": 2.3,
+        "bearing_degrees": 47,
+        "elevation_degrees": 12,
+        "velocity_mps": 15,
+        "rcs_dbsm": -12,
+        "doppler_frequency_hz": 52,
+        "band": "Ku"
+      },
+      {
+        "timestamp": "2025-01-15T10:25:02Z",
+        "range_km": 2.8,
+        "bearing_degrees": 43,
+        "elevation_degrees": 18,
+        "velocity_mps": 10,
+        "rcs_dbsm": -18,
+        "doppler_frequency_hz": 38,
+        "band": "Ku"
+      }
+    ]
+  },
+  
+  "threat_assessment_notes": "Multiple targets with strong Ku-band Doppler signatures (38-52 Hz) indicating multi-rotor drones, likely hexacopters. Small RCS (-12 to -18 dBsm) consistent with tactical drones. Coordinated approach pattern suggests swarm tactics. Recommend immediate specialist analysis and countermeasure deployment."
+}

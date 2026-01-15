@@ -1,0 +1,523 @@
+visual_detection_task:
+  description: >
+    MISSION: Analyze images from ship cameras to detect and classify threats.
+    Fuse visual detections with radar traces when available.
+    
+    INPUTS PROVIDED:
+    - Images: {images}
+    - Radar Data: {radar_data}
+    
+    EXECUTION:
+    1. Use YOLO Threat Detector to analyze all provided images:
+       - Detect objects (drones, vessels, aircraft, missiles)
+       - Get confidence scores and bounding boxes
+       - Classify object types
+    
+    2. Use Radar Vision Fusion to correlate detections with radar:
+       - Match visual detections to radar traces by bearing/range
+       - Validate targets with Doppler signatures
+       - Identify propeller/rotor signatures (Ku-band Doppler)
+       - Calculate fusion confidence
+    
+    3. Report all fused detections with:
+       - Object type and confidence
+       - Visual characteristics (size, position)
+       - Radar characteristics (range, velocity, Doppler)
+       - Fusion confidence and correlation status
+    
+    4. Highlight high-confidence threats:
+       - Radar-correlated detections
+       - Doppler signatures indicating drones
+       - Fast-moving or close-range objects
+    
+    CRITICAL: Complete detection in ONE execution. Do NOT iterate.
+  
+  agent: vision_analyst_agent
+  
+  expected_output: >
+    Visual detection and fusion report:
+    
+    ===================================================================
+    VISUAL THREAT DETECTION REPORT
+    ===================================================================
+    
+    Images Processed: [N]
+    Radar Traces Correlated: [N]
+    Total Detections: [N]
+    High-Confidence Threats: [N]
+    
+    DETECTION #1
+    -------------------------------------------------------------------
+      Object Type: [drone/vessel/aircraft/missile]
+      Confidence: [X]%
+      Image: [filename]
+      Bounding Box: [x, y, w, h]
+      
+      Radar Correlation: [YES/NO]
+      Range: [X] km
+      Bearing: [X]°
+      Velocity: [X] m/s
+      Doppler Signature: [X] Hz ([description])
+      Fusion Confidence: [X]%
+      
+      Assessment: [Brief threat assessment]
+    
+    [Repeat for each detection]
+    
+    ===================================================================
+    PRIORITY THREATS
+    ===================================================================
+    [List highest priority detections for specialist analysis]
+    
+    ===================================================================
+  
+  output_file: output/visual_detection_task.md
+
+threat_coordination_task:
+  description: >
+    MISSION: Coordinate threat analysis by delegating to specialists and
+    compiling comprehensive threat assessment.
+    
+    INPUT: Visual detection report from previous task (available in context)
+    
+    EXECUTION:
+    1. Review all detections from vision analyst
+    
+    2. Prioritize threats by:
+       - Proximity (range in km)
+       - Velocity (speed toward ship)
+       - Threat type (drone/missile > vessel > aircraft)
+       - Confidence level
+    
+    3. Delegate to appropriate specialists:
+       - Drones → Drone Specialist Agent
+       - Missiles → Missile Specialist Agent (future)
+       - Vessels → Vessel Specialist Agent (future)
+       - Aircraft → Aircraft Specialist Agent (future)
+    
+    4. For EACH high-priority threat, request specialist analysis
+    
+    5. Compile comprehensive threat picture with:
+       - All threats ranked by priority
+       - Specialist assessments
+       - Recommended countermeasures from specialists
+       - Overall threat level (CRITICAL/HIGH/MEDIUM/LOW)
+    
+    CRITICAL: You are a COORDINATOR, not an analyst. Delegate to specialists
+    and compile their findings. Do NOT perform detailed analysis yourself.
+    
+    Complete coordination in ONE execution with specialist delegation.
+  
+  agent: coordinator_agent
+  
+  context:
+    - visual_detection_task
+  
+  expected_output: >
+    Threat coordination report:
+    
+    ===================================================================
+    THREAT COORDINATION REPORT
+    ===================================================================
+    
+    Overall Threat Level: [CRITICAL/HIGH/MEDIUM/LOW]
+    Total Threats: [N]
+    Priority Threats Analyzed: [N]
+    
+    THREAT PRIORITIZATION
+    -------------------------------------------------------------------
+    
+    Priority 1: [Threat ID]
+      Type: [type]
+      Range: [X] km
+      Threat Level: [level]
+      Delegated To: [specialist]
+    
+    Priority 2: [Threat ID]
+      [Same format]
+    
+    [Continue for all priority threats]
+    
+    ===================================================================
+    SPECIALIST ASSESSMENTS
+    ===================================================================
+    
+    [Compiled findings from drone/missile/vessel specialists]
+    
+    ===================================================================
+    RECOMMENDED COUNTERMEASURES
+    ===================================================================
+    
+    [Summary of specialist recommendations for tactical planning]
+    
+    ===================================================================
+  
+  output_file: output/threat_coordination_task.md
+
+drone_analysis_task:
+  description: >
+    MISSION: Analyze detected drones in detail to determine type, capabilities,
+    swarm potential, and optimal countermeasures.
+    
+    INPUT: Threat coordination report with drone detections (available in context)
+    
+    EXECUTION:
+    1. Extract all drone detections from context
+    
+    2. For EACH drone detection, use Drone Analysis System:
+       - Classify drone type (micro/mini/tactical/strategic)
+       - Determine size class and capabilities
+       - Assess payload potential
+       - Evaluate swarm likelihood
+       - Calculate threat level
+    
+    3. Analyze swarm patterns:
+       - Multiple small drones = likely swarm
+       - Similar bearings/ranges = coordinated attack
+       - Estimate swarm size and tactics
+    
+    4. Recommend countermeasures for each drone:
+       - Small drones/swarms: DEW (30-50 kW, 95 GHz)
+       - Medium drones: DEW or CIWS depending on payload
+       - Large drones: CIWS (RAM/SeaRAM)
+       - Swarms: Area-effect DEW prioritized
+    
+    5. Provide tactical recommendations:
+       - Engagement priorities
+       - Weapon system selection
+       - Technical parameters
+    
+    TOOL USAGE:
+    - Use Drone Analysis System for each drone
+    - Compile comprehensive drone threat assessment
+    
+    Complete analysis in ONE execution. Do NOT iterate.
+  
+  agent: drone_specialist_agent
+  
+  context:
+    - visual_detection_task
+    - threat_coordination_task
+  
+  expected_output: >
+    Drone threat analysis report:
+    
+    ===================================================================
+    DRONE THREAT ANALYSIS REPORT
+    ===================================================================
+    
+    Total Drones Detected: [N]
+    Swarm Assessment: [YES/NO - confidence X%]
+    Overall Drone Threat: [CRITICAL/HIGH/MEDIUM/LOW]
+    
+    DRONE #1 ANALYSIS
+    -------------------------------------------------------------------
+      Drone ID: [ID]
+      Drone Type: [type]
+      Size Class: [micro/mini/tactical/strategic]
+      
+      Characteristics:
+        - Mass: [X] kg
+        - Payload Capacity: [X] kg
+        - Estimated Range: [X] km
+        - Rotor Count: [N]
+      
+      Threat Assessment:
+        - Threat Level: [CRITICAL/HIGH/MEDIUM/LOW]
+        - Likely Mission: [ISR/weapons/delivery]
+        - Swarm Participant: [YES/NO]
+      
+      Recommended Countermeasures:
+        1. [Countermeasure type] - Priority [N]
+           Parameters: [specific parameters]
+           Rationale: [why this countermeasure]
+        
+        2. [Alternative countermeasure]
+           [Same format]
+    
+    [Repeat for each drone]
+    
+    ===================================================================
+    SWARM ANALYSIS
+    ===================================================================
+    
+    Swarm Detected: [YES/NO]
+    Estimated Swarm Size: [N] units
+    Swarm Tactics: [description]
+    Swarm Countermeasures: [specific recommendations]
+    
+    ===================================================================
+    TACTICAL RECOMMENDATIONS
+    ===================================================================
+    
+    Priority Engagement Order:
+      1. [Drone ID] - [rationale]
+      2. [Drone ID] - [rationale]
+    
+    Weapon System Selection:
+      [Specific recommendations with parameters]
+    
+    ===================================================================
+  
+  output_file: output/drone_analysis_task.md
+
+tactical_planning_task:
+  description: >
+    MISSION: Generate 2-3 countermeasure plans to neutralize detected threats.
+    Each plan uses different tactical approaches with specific weapon parameters.
+    
+    INPUT: All threat analysis from previous tasks (available in context)
+    
+    EXECUTION:
+    1. Review comprehensive threat assessment:
+       - Drone analysis from specialist
+       - Threat prioritization from coordinator
+       - Recommended countermeasures
+    
+    2. Generate 2-3 DISTINCT tactical plans:
+       
+       Plan A - Direct Neutralization (Aggressive)
+         Philosophy: Immediate kinetic/energy destruction
+         Focus: DEW or CIWS based on threat size
+         Example: 50kW DEW at 95GHz for drone swarm
+       
+       Plan B - Electronic Disruption (Non-kinetic)
+         Philosophy: Disable without destruction
+         Focus: Jamming C2 links, GPS denial
+         Example: 2.4 GHz jamming at 40 dBm
+       
+       Plan C - Layered Defense (Combined)
+         Philosophy: Multiple countermeasures
+         Focus: Jam + DEW, or DEW + CIWS
+         Example: Jam coordination, then DEW engagement
+    
+    3. For EACH plan specify:
+       - Plan ID (PLAN-001, PLAN-002, PLAN-003)
+       - Plan name and approach
+       - Target threats (IDs)
+       - Ordered countermeasures with technical parameters:
+         * Countermeasure type
+         * Target threat ID
+         * Weapon system parameters (power, frequency, etc.)
+         * Estimated effectiveness (0-100%)
+         * Execution time
+       - Overall effectiveness estimate
+       - Resource cost (LOW/MEDIUM/HIGH)
+       - PROS: 3+ advantages
+       - CONS: 3+ disadvantages
+    
+    4. Output all plans in structured format for human selection
+    
+    CRITICAL INSTRUCTIONS:
+    - Generate ALL plans in ONE response
+    - Use actual threat IDs from context
+    - Provide realistic technical parameters
+    - Do NOT iterate or request feedback
+    - Plans don't need to be perfect (human will select)
+    
+    TOOL USAGE:
+    - You do NOT need tools
+    - All information is in context
+    - Focus on plan generation
+  
+  agent: tactical_response_agent
+  
+  context:
+    - visual_detection_task
+    - threat_coordination_task
+    - drone_analysis_task
+  
+  expected_output: >
+    Tactical countermeasure plans:
+    
+    ===================================================================
+    TACTICAL COUNTERMEASURE PLANS
+    ===================================================================
+    
+    Plans Generated: 3
+    Target Threats: [N]
+    
+    PLAN A: DIRECT NEUTRALIZATION
+    -------------------------------------------------------------------
+    Plan ID: PLAN-001
+    Approach: Aggressive kinetic/energy destruction
+    
+    Countermeasures (execution order):
+      1. DEW Engagement
+         Target: [Drone ID]
+         Parameters:
+           - Power: 50 kW
+           - Frequency: 95 GHz
+           - Beam Width: 15°
+           - Duration: 3 seconds
+         Estimated Effectiveness: 90%
+      
+      2. [Additional countermeasures if needed]
+         [Same format]
+    
+    Overall Effectiveness: [X]%
+    Execution Time: [X] seconds
+    Resource Cost: MEDIUM
+    
+    PROS:
+      ✓ Immediate threat neutralization
+      ✓ High effectiveness
+      ✓ Clear success criteria
+    
+    CONS:
+      ✗ Expends ammunition/power
+      ✗ Single engagement mode
+      ✗ No fallback if system fails
+    
+    -------------------------------------------------------------------
+    
+    PLAN B: ELECTRONIC DISRUPTION
+    -------------------------------------------------------------------
+    Plan ID: PLAN-002
+    [Same format as Plan A]
+    
+    -------------------------------------------------------------------
+    
+    PLAN C: LAYERED DEFENSE
+    -------------------------------------------------------------------
+    Plan ID: PLAN-003
+    [Same format as Plan A]
+    
+    ===================================================================
+    RECOMMENDATION FOR HUMAN SELECTION
+    ===================================================================
+    
+    [Brief tactical recommendation on which plan might be preferred,
+     but emphasize that commander makes final decision]
+    
+    ===================================================================
+    STATUS: 3 plans ready for human approval
+    ===================================================================
+  
+  output_file: output/tactical_planning_task.md
+
+# NOTE: HITL (Human In The Loop) happens here
+# Commander selects Plan A, B, or C via Gradio or CLI
+# Selected plan is passed to execution task
+
+countermeasure_execution_task:
+  description: >
+    MISSION: Execute the countermeasure plan selected by the commanding officer.
+    Deploy weapon systems and report engagement results.
+    
+    INPUT: Selected plan from human operator (passed via context)
+    
+    The human has selected one of the three plans. Execute all countermeasures
+    in that plan and report results.
+    
+    EXECUTION:
+    1. Parse selected plan from context:
+       - Extract plan ID, countermeasures list
+       - Note execution order and parameters
+    
+    2. For EACH countermeasure, select actuator tool:
+       
+       Countermeasure → Actuator Mapping:
+       - DEW → Directed Energy Weapon Actuator
+       - CIWS → CIWS Actuator
+       - Jamming → Electronic Jamming Actuator
+    
+    3. Execute countermeasures sequentially:
+       - Log start time
+       - Call appropriate actuator with parameters
+       - Capture result (SUCCESS/PARTIAL/FAILURE)
+       - Log effectiveness and completion
+    
+    4. Compile execution report:
+       - Each countermeasure status
+       - Overall effectiveness achieved
+       - Threats neutralized vs remaining
+       - Systems status
+       - Ammunition/resources expended
+    
+    5. Final assessment:
+       - Mission success? (YES/PARTIAL/NO)
+       - Follow-up actions needed?
+       - Lessons learned
+    
+    TOOL USAGE:
+    - Use DEW Actuator for directed energy
+    - Use CIWS Actuator for kinetic
+    - Use Electronic Jamming Actuator for jamming
+    - Execute in order specified in plan
+    
+    Complete execution in ONE pass. Do NOT iterate.
+  
+  agent: actuator_agent
+  
+  context:
+    - visual_detection_task
+    - threat_coordination_task
+    - drone_analysis_task
+    - tactical_planning_task
+  
+  expected_output: >
+    Countermeasure execution report:
+    
+    ===================================================================
+    COUNTERMEASURE EXECUTION REPORT
+    ===================================================================
+    
+    Selected Plan: [Plan Name]
+    Plan ID: [PLAN-00X]
+    Execution Start: [Timestamp]
+    
+    EXECUTION LOG
+    -------------------------------------------------------------------
+    
+    [1] DEW Engagement
+        Target: Drone-001
+        System: Directed Energy Weapon
+        Parameters: 50 kW, 95 GHz, 15° beam, 3 seconds
+        Time: T+0s to T+3s
+        Result: SUCCESS
+        Effectiveness: 92%
+        Details: Target electronics destroyed. Drone neutralized.
+    
+    [2] [Next countermeasure]
+        [Same format]
+    
+    [Continue for all countermeasures]
+    
+    ===================================================================
+    EXECUTION SUMMARY
+    ===================================================================
+    
+    Total Countermeasures: [N]
+    Successful: [N]
+    Partial: [N]
+    Failed: [N]
+    
+    Total Execution Time: [X] seconds
+    Overall Effectiveness: [X]%
+    
+    THREAT STATUS:
+      - Drone-001: NEUTRALIZED
+      - Drone-002: NEUTRALIZED
+      - [Additional threats]
+    
+    RESOURCE EXPENDITURE:
+      - DEW Energy: [X] kWh
+      - CIWS Rounds: [N]
+      - Jamming Duration: [X] seconds
+    
+    ===================================================================
+    MISSION ASSESSMENT
+    ===================================================================
+    
+    Mission Result: SUCCESS / PARTIAL / FAILURE
+    
+    Assessment:
+    [Concise summary of engagement outcome and current threat status]
+    
+    Follow-up Actions:
+    [Any recommended follow-up actions or lessons learned]
+    
+    ===================================================================
+  
+  output_file: output/countermeasure_execution_task.md

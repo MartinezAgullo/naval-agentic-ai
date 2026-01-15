@@ -1,0 +1,65 @@
+[project]
+name = "threat-detection-agent-v1"
+version = "0.1.0"
+description = "A multi-agent system for visual threat detection and response in Naval operations"
+authors = [
+    { name = "Pablo Martínez Agulló", email = "pablo.martinez.agullo@gmail.com" }
+]
+license = { text = "GNU General Public License (GPL) 3.0" }
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+
+dependencies = [
+    # Core CrewAI dependencies
+    "crewai",
+    "crewai[tools]",
+    
+    # LLM providers
+    "anthropic>=0.39.0",
+    "openai",
+    "python-dotenv",
+    
+    # Computer vision (torch is optional, see below)
+    "ultralytics>=8.0.0",      # YOLOv8 for object detection
+    "opencv-python>=4.8.0",    # Image processing
+    "Pillow>=10.0.0",          # Image handling
+    
+    # Data processing
+    "numpy<2",                  # Numerical operations
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    
+    # Gradio interface
+    "gradio>=4.0.0",
+    
+    # Utilities
+    "PyYAML>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+# Optional: PyTorch for YOLO
+# Apple Silicon (M1/M2/M3) users: ultralytics will auto-install torch if needed
+# Or install manually: pip install torch torchvision
+# The system will use mock detection if torch/ultralytics unavailable
+torch = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
