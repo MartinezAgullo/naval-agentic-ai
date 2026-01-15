@@ -252,7 +252,7 @@ def _format_status(result):
 
 
 def _format_plans(plans):
-    """Format plans as HTML for selection"""
+    """Format plans as HTML for selection with military styling"""
     if not plans:
         return "<p style='color: #721c24;'>No plans available</p>"
     
@@ -260,46 +260,46 @@ def _format_plans(plans):
     
     for idx, plan in enumerate(plans, 1):
         html += f"""
-        <div style='padding: 15px; margin-bottom: 15px; border: 2px solid #004085; border-radius: 5px; background-color: #cce5ff;'>
-            <h4 style='color: #003d7a; margin-top: 0;'>Plan {idx}: {plan['plan_name']}</h4>
-            <p style='color: #003d7a; margin: 5px 0;'><strong>Plan ID:</strong> {plan['plan_id']}</p>
-            <p style='color: #003d7a; margin: 5px 0;'><strong>Approach:</strong> {plan['approach']}</p>
-            <p style='color: #003d7a; margin: 5px 0;'><strong>Effectiveness:</strong> {plan['effectiveness']}%</p>
-            <p style='color: #003d7a; margin: 5px 0;'><strong>Execution Time:</strong> {plan['execution_time']} seconds</p>
-            <p style='color: #003d7a; margin: 5px 0;'><strong>Resource Cost:</strong> {plan['resource_cost']}</p>
+        <div style='padding: 20px; margin-bottom: 15px; border: 2px solid #1b5e20; border-radius: 5px; background-color: #1b4d1b; color: #e8f5e9;'>
+            <h4 style='color: #a5d6a7; margin-top: 0; border-bottom: 2px solid #2e7d32; padding-bottom: 10px;'>Plan {idx}: {plan['plan_name']}</h4>
+            <p style='color: #c8e6c9; margin: 8px 0;'><strong style='color: #81c784;'>Plan ID:</strong> {plan['plan_id']}</p>
+            <p style='color: #c8e6c9; margin: 8px 0;'><strong style='color: #81c784;'>Approach:</strong> {plan['approach']}</p>
+            <p style='color: #c8e6c9; margin: 8px 0;'><strong style='color: #81c784;'>Effectiveness:</strong> {plan['effectiveness']}%</p>
+            <p style='color: #c8e6c9; margin: 8px 0;'><strong style='color: #81c784;'>Execution Time:</strong> {plan['execution_time']} seconds</p>
+            <p style='color: #c8e6c9; margin: 8px 0;'><strong style='color: #81c784;'>Resource Cost:</strong> {plan['resource_cost']}</p>
             
             <details style='margin-top: 10px;'>
-                <summary style='color: #003d7a; font-weight: bold; cursor: pointer;'>Countermeasures</summary>
-                <ul style='color: #003d7a; margin-top: 5px;'>
+                <summary style='color: #a5d6a7; font-weight: bold; cursor: pointer; padding: 5px; background-color: #2e4d2e; border-radius: 3px;'>▸ Countermeasures</summary>
+                <ul style='color: #c8e6c9; margin-top: 10px; background-color: #1a3a1a; padding: 15px; border-radius: 3px;'>
         """
         
         for cm in plan['countermeasures']:
             cm_type = cm.get('type', 'unknown').replace('_', ' ').title()
-            html += f"<li>{cm_type}</li>"
+            html += f"<li style='margin: 5px 0;'>⚡ {cm_type}</li>"
         
         html += """
                 </ul>
             </details>
             
             <details style='margin-top: 10px;'>
-                <summary style='color: #155724; font-weight: bold; cursor: pointer;'>PROS</summary>
-                <ul style='color: #155724; margin-top: 5px;'>
+                <summary style='color: #a5d6a7; font-weight: bold; cursor: pointer; padding: 5px; background-color: #2e4d2e; border-radius: 3px;'>▸ PROS</summary>
+                <ul style='color: #a5d6a7; margin-top: 10px; background-color: #1a3a1a; padding: 15px; border-radius: 3px;'>
         """
         
         for pro in plan['pros']:
-            html += f"<li>✓ {pro}</li>"
+            html += f"<li style='margin: 5px 0;'>✓ {pro}</li>"
         
         html += """
                 </ul>
             </details>
             
             <details style='margin-top: 10px;'>
-                <summary style='color: #721c24; font-weight: bold; cursor: pointer;'>CONS</summary>
-                <ul style='color: #721c24; margin-top: 5px;'>
+                <summary style='color: #ffab91; font-weight: bold; cursor: pointer; padding: 5px; background-color: #4d2e2e; border-radius: 3px;'>▸ CONS</summary>
+                <ul style='color: #ffccbc; margin-top: 10px; background-color: #3a1a1a; padding: 15px; border-radius: 3px;'>
         """
         
         for con in plan['cons']:
-            html += f"<li>✗ {con}</li>"
+            html += f"<li style='margin: 5px 0;'>✗ {con}</li>"
         
         html += """
                 </ul>
@@ -334,9 +334,11 @@ def _read_drone_analysis(output_files):
     
     return "No drone analysis available yet. Run detection first."
 
+naval_theme = gr.themes.Default(primary_hue="green")
 
 # Build Gradio interface
 with gr.Blocks(
+    theme=naval_theme,  # 2. Pass the theme here
     title="Naval Threat Detection System",
     css="""
     .dark-green-btn {
@@ -346,12 +348,6 @@ with gr.Blocks(
     .dark-green-btn:hover {
         background-color: #2e7d32 !important;
         border-color: #2e7d32 !important;
-    }
-
-    /* TARGETED FIX: This overrides the orange highlight on the Tabs */
-    .tabs .tab-nav button.selected {
-        color: #004085 !important; /* Change active text to Dark Blue */
-        border-bottom-color: #004085 !important; /* Change underline to Dark Blue */
     }
     """
 ) as app:
@@ -390,7 +386,11 @@ with gr.Blocks(
                     plans_output = gr.HTML(label="Available Plans")
                 
                 with gr.Tab("🚁 Drone Analysis"):
-                    drone_analysis_output = gr.Markdown(label="Drone Threat Analysis")
+                    drone_analysis_output = gr.Textbox(
+                        label="Drone Threat Analysis Report",
+                        lines=25,
+                        max_lines=40
+                    )
                 
                 with gr.Tab("📊 All Reports"):
                     reports_output = gr.Textbox(
@@ -458,27 +458,16 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
-
-    logger.info("Starting Gradio interface for Image-based Naval Threat Detection System")
-    naval_theme = gr.themes.Default(primary_hue="green")
-
     try:
+        logger.info("Starting Gradio interface on port 7862")
         app.launch(
-            theme=naval_theme,
             server_name="0.0.0.0",
             server_port=7862,
-            share=False,
-            css="""
-            .tabs .tab-nav button.selected { 
-                color: #004085 !important; 
-                border-bottom-color: #004085 !important; 
-            }
-            """
+            share=False
         )
     except KeyboardInterrupt:
         pass
     finally:
         logger.info("="*50)
-        logger.info(" Image-processor Agent stopped gracefully")
+        logger.info(" Naval Threat Detection Agent stopped gracefully")
         logger.info("="*50)
-    

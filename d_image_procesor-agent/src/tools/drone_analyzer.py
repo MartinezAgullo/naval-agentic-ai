@@ -120,12 +120,36 @@ class DroneAnalysisTool(BaseTool):
             # Analyze first threat in list
             threat = threat[0]
         
-        # Check if this is actually a drone
-        object_type = threat.get("object_type", "unknown")
-        if object_type not in ["drone", "aircraft"]:
+        # Handle nested "detections" wrapper
+        if "detections" in threat and isinstance(threat["detections"], list):
+            if not threat["detections"]:
+                return json.dumps({"error": "No detections in list"})
+            threat = threat["detections"][0]
+        
+        # Extract object type - try multiple fields
+        object_type = (
+            threat.get("object_type") or 
+            threat.get("type") or 
+            threat.get("subtype") or
+            "unknown"
+        ).lower()
+        
+        logger.info(f"Analyzing object: type='{object_type}'")
+        
+        # Check if this is a drone or aircraft (both analyzable)
+        # Accept: "drone", "quadcopter", "aircraft", or anything with "drone" in name
+        is_drone_like = any([
+            "drone" in object_type,
+            "quadcopter" in object_type,
+            "aircraft" in object_type,
+            object_type == "uav",
+            object_type == "uas"
+        ])
+        
+        if not is_drone_like:
             return json.dumps({
                 "analysis_result": "not_a_drone",
-                "message": f"Object type '{object_type}' is not analyzable by drone system"
+                "message": f"Object type '{object_type}' is not analyzable by drone system. Expected: drone, quadcopter, aircraft, or UAV."
             })
         
         # Perform analysis

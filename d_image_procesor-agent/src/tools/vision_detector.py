@@ -163,7 +163,7 @@ class YOLODetectionTool(BaseTool):
             0: "unknown",     # person (ignore)
             2: "vehicle",     # car
             3: "vehicle",     # motorcycle
-            4: "aircraft",    # airplane
+            4: "aircraft",    # airplane (may be drone - Nyckel will classify)
             5: "vessel",      # bus (proxy for ship)
             6: "vehicle",     # train
             7: "vessel",      # truck (proxy for ship)
