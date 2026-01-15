@@ -73,7 +73,7 @@ class YOLODetectionTool(BaseTool):
             logger.error(f"Failed to initialize YOLO model: {e}")
             self._model = None
     
-    def _run(self, image_paths: List[str], confidence_threshold: float = 0.25) -> str:
+    def _run(self, image_paths: List[str], confidence_threshold: float = 0.35) -> str:
         """
         Run YOLO detection on provided images.
         
@@ -171,6 +171,7 @@ class YOLODetectionTool(BaseTool):
             14: "drone",      # bird (proxy for drone in POC)
             15: "animal",     # cat (ignore)
             16: "animal",     # dog (ignore)
+            33: "drone",      # kite (flying object - treat as drone)
         }
         
         return threat_mapping.get(class_id, "unknown")

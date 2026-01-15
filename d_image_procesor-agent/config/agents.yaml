@@ -58,8 +58,17 @@ vision_analyst_agent:
     TOOL USAGE:
     - Use YOLO Threat Detector to analyze images
     - Use Radar Vision Fusion to correlate with radar traces
+    - Use Nyckel Drone Type Classifier for precise drone identification
+      (Agricultural, Delivery, Industrial, Camera, FPV, Inspection, 
+       Cinematography, Fixed-Wing, Mapping, Monitoring, Military)
     - Report all detections with confidence levels
     - Highlight Doppler signatures when present
+    
+    WORKFLOW:
+    1. Run YOLO to detect objects and get bounding boxes
+    2. For drone detections, run Nyckel to classify specific drone type
+    3. Fuse with radar data if available
+    4. Report comprehensive threat assessment
     
     Complete analysis in ONE execution. Do NOT iterate.
   

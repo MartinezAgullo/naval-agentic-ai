@@ -43,7 +43,7 @@ def process_threat_detection(images, radar_json):
         
         # Check inputs
         if not images or len(images) == 0:
-            return "❌ Error: No images uploaded", "", "", gr.update(visible=False)
+            return "❌ Error: No images uploaded", "", "", "", gr.update(visible=False)
         
         # Save uploaded images temporarily
         image_paths = []
@@ -72,19 +72,19 @@ def process_threat_detection(images, radar_json):
                 json.loads(radar_json)  # Validate JSON
                 radar_data = radar_json
             except json.JSONDecodeError:
-                return "❌ Error: Invalid radar JSON format", "", "", gr.update(visible=False)
+                return "❌ Error: Invalid radar JSON format", "", "", "", gr.update(visible=False)
         
-        # Run threat detection (without execution)
-        # We'll stop at tactical planning to get plans for human selection
+        # Run threat detection WITHOUT execution (skip HITL, just get plans)
         result = run_threat_detection(
             images=image_paths,
             radar_data=radar_data,
-            hitl_callback=None  # We'll handle HITL via Gradio buttons
+            hitl_callback=None,
+            skip_execution=True  # Stop at tactical planning, return plans
         )
         
         if not result['success']:
             error_msg = result.get('error', 'Unknown error')
-            return f"❌ Detection failed: {error_msg}", "", "", gr.update(visible=False)
+            return f"❌ Detection failed: {error_msg}", "", "", "", gr.update(visible=False)
         
         # Store plans globally for later selection
         current_plans = result.get('plans', [])
@@ -96,21 +96,24 @@ def process_threat_detection(images, radar_json):
         # Format plans for selection
         plans_html = _format_plans(current_plans)
         
-        # Read reports
+        # Extract drone analysis report separately
+        drone_analysis_md = _read_drone_analysis(result.get('output_files', {}))
+        
+        # Read all reports
         reports_text = _read_reports(result.get('output_files', {}))
         
         logger.info(f"Detection complete: {len(current_plans)} plans generated")
         
-        return status_html, plans_html, reports_text, gr.update(visible=True)
+        return status_html, plans_html, drone_analysis_md, reports_text, gr.update(visible=True)
     
     except Exception as e:
         logger.error(f"Gradio processing error: {e}", exc_info=True)
-        return f"❌ Error: {str(e)}", "", "", gr.update(visible=False)
+        return f"❌ Error: {str(e)}", "", "", "", gr.update(visible=False)
 
 
 def select_plan(plan_number):
     """
-    Execute selected countermeasure plan.
+    Execute selected countermeasure plan WITH REAL ACTUATORS.
     
     Args:
         plan_number: Plan number (1, 2, or 3)
@@ -122,58 +125,127 @@ def select_plan(plan_number):
     
     try:
         if not current_plans:
-            return "❌ Error: No plans available. Run detection first."
+            return "<p style='color: #721c24;'>❌ Error: No plans available. Run detection first.</p>"
         
         plan_idx = plan_number - 1
         if plan_idx < 0 or plan_idx >= len(current_plans):
-            return f"❌ Error: Invalid plan number {plan_number}"
+            return f"<p style='color: #721c24;'>❌ Error: Invalid plan number {plan_number}</p>"
         
         selected_plan = current_plans[plan_idx]
         logger.info(f"User selected plan: {selected_plan['plan_id']}")
         
-        # In a full implementation, we would re-run the crew with execution task
-        # For this POC, we'll simulate execution
+        # REAL EXECUTION: Run the crew's actuator agent
+        from src.crew import ThreatDetectionCrew
+        from src.tools.actuators import DEWActuator, CIWSActuator, ElectronicJammingActuator
         
-        execution_html = f"""
-        <div style='padding: 20px; border: 2px solid #28a745; border-radius: 5px; background-color: #d4edda;'>
-            <h3 style='color: #155724;'>✓ Plan Executed: {selected_plan['plan_name']}</h3>
-            <p><strong>Plan ID:</strong> {selected_plan['plan_id']}</p>
-            <p><strong>Approach:</strong> {selected_plan['approach']}</p>
-            <p><strong>Effectiveness:</strong> {selected_plan['effectiveness']}%</p>
+        execution_results = []
+        overall_success = True
+        
+        # Execute each countermeasure using actual actuator tools
+        for idx, cm in enumerate(selected_plan['countermeasures'], 1):
+            cm_type = cm.get('type', 'unknown')
             
-            <h4>Countermeasures Executed:</h4>
-            <ul>
+            logger.info(f"Executing countermeasure {idx}: {cm_type}")
+            
+            # Select and call appropriate actuator
+            if cm_type == 'directed_energy_weapon':
+                actuator = DEWActuator()
+                result_json = actuator._run(
+                    target_id=cm.get('target_id', 'DRONE-001'),
+                    power_kw=cm.get('power_kw', 50),
+                    frequency_ghz=cm.get('frequency_ghz', 95),
+                    beam_width_deg=cm.get('beam_width_deg', 15),
+                    duration_s=cm.get('duration_s', 3)
+                )
+            elif cm_type == 'ciws_engagement':
+                actuator = CIWSActuator()
+                result_json = actuator._run(
+                    target_id=cm.get('target_id', 'DRONE-001'),
+                    weapon_type=cm.get('weapon', 'RAM'),
+                    rounds=cm.get('rounds', 2),
+                    engagement_range_km=cm.get('engagement_range_km', 3)
+                )
+            elif cm_type == 'electronic_jamming':
+                actuator = ElectronicJammingActuator()
+                result_json = actuator._run(
+                    target_id=cm.get('target_id', 'DRONE-001'),
+                    frequency_mhz=cm.get('frequency_mhz', 2400),
+                    power_dbm=cm.get('power_dbm', 40),
+                    jamming_type=cm.get('jamming_type', 'barrage'),
+                    duration_s=cm.get('duration_s', 10)
+                )
+            else:
+                result_json = json.dumps({
+                    "actuator": cm_type,
+                    "status": "UNKNOWN",
+                    "error": f"Unknown countermeasure type: {cm_type}"
+                })
+                overall_success = False
+            
+            result = json.loads(result_json)
+            execution_results.append({
+                "number": idx,
+                "type": cm_type,
+                "result": result
+            })
+            
+            if result.get("status") != "SUCCESS":
+                overall_success = False
+        
+        # Format execution results as HTML
+        execution_html = f"""
+        <div style='padding: 20px; border: 2px solid {"#28a745" if overall_success else "#ffc107"}; border-radius: 5px; background-color: {"#d4edda" if overall_success else "#fff3cd"};'>
+            <h3 style='color: {"#155724" if overall_success else "#856404"}; margin-top: 0;'>{'✓' if overall_success else '⚠'} Plan Executed: {selected_plan['plan_name']}</h3>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Plan ID:</strong> {selected_plan['plan_id']}</p>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Approach:</strong> {selected_plan['approach']}</p>
+            
+            <h4 style='color: #003d7a; margin-top: 15px;'>Execution Log:</h4>
         """
         
-        for cm in selected_plan['countermeasures']:
-            cm_type = cm.get('type', 'unknown').replace('_', ' ').title()
-            execution_html += f"<li><strong>{cm_type}</strong></li>"
+        for exec_result in execution_results:
+            result_data = exec_result['result']
+            status = result_data.get('status', 'UNKNOWN')
+            effectiveness = result_data.get('effectiveness', 0)
+            
+            status_color = '#155724' if status == 'SUCCESS' else '#856404' if status == 'PARTIAL' else '#721c24'
+            
+            execution_html += f"""
+            <div style='margin: 10px 0; padding: 10px; border-left: 3px solid {status_color}; background-color: white;'>
+                <p style='color: {status_color}; margin: 5px 0; font-weight: bold;'>
+                    [{exec_result['number']}] {exec_result['type'].replace('_', ' ').title()}
+                </p>
+                <p style='color: #003d7a; margin: 5px 0;'><strong>Status:</strong> {status}</p>
+                <p style='color: #003d7a; margin: 5px 0;'><strong>Effectiveness:</strong> {effectiveness}%</p>
+                <p style='color: #003d7a; margin: 5px 0;'><strong>Details:</strong> {result_data.get('effects', 'N/A')}</p>
+            </div>
+            """
         
-        execution_html += """
-            </ul>
-            <p style='color: #155724; font-weight: bold;'>Mission: SUCCESS</p>
-            <p>All threats neutralized. Ship systems operational.</p>
+        execution_html += f"""
+            <h4 style='color: #003d7a; margin-top: 15px;'>Mission Result:</h4>
+            <p style='color: {"#155724" if overall_success else "#856404"}; font-weight: bold; margin: 5px 0;'>
+                {'SUCCESS - All countermeasures executed successfully' if overall_success else 'PARTIAL - Some countermeasures had issues'}
+            </p>
         </div>
         """
         
         return execution_html
     
     except Exception as e:
-        logger.error(f"Plan selection error: {e}", exc_info=True)
-        return f"❌ Error executing plan: {str(e)}"
+        logger.error(f"Plan execution error: {e}", exc_info=True)
+        return f"<p style='color: #721c24;'>❌ Error executing plan: {str(e)}</p>"
 
 
 def _format_status(result):
     """Format detection status as HTML"""
     html = """
     <div style='padding: 15px; border: 2px solid #28a745; border-radius: 5px; background-color: #d4edda;'>
-        <h3 style='color: #155724;'>✓ Threat Detection Complete</h3>
+        <h3 style='color: #155724; margin-top: 0;'>✓ Threat Detection Complete</h3>
     """
     
     if 'plans' in result and result['plans']:
-        html += f"<p><strong>Plans Generated:</strong> {len(result['plans'])}</p>"
+        html += f"<p style='color: #155724; margin-bottom: 0;'><strong>Plans Generated:</strong> {len(result['plans'])}</p>"
     
-    html += "<p>Review the tactical plans below and select one for execution.</p>"
+    html += "<p style='color: #155724; margin-bottom: 0;'>Review the tactical plans below and select one for execution.</p>"
     html += "</div>"
     
     return html
@@ -182,23 +254,23 @@ def _format_status(result):
 def _format_plans(plans):
     """Format plans as HTML for selection"""
     if not plans:
-        return "<p>No plans available</p>"
+        return "<p style='color: #721c24;'>No plans available</p>"
     
     html = "<div style='margin-top: 20px;'>"
     
     for idx, plan in enumerate(plans, 1):
         html += f"""
-        <div style='padding: 15px; margin-bottom: 15px; border: 2px solid #007bff; border-radius: 5px; background-color: #cfe2ff;'>
-            <h4 style='color: #004085;'>Plan {idx}: {plan['plan_name']}</h4>
-            <p><strong>Plan ID:</strong> {plan['plan_id']}</p>
-            <p><strong>Approach:</strong> {plan['approach']}</p>
-            <p><strong>Effectiveness:</strong> {plan['effectiveness']}%</p>
-            <p><strong>Execution Time:</strong> {plan['execution_time']} seconds</p>
-            <p><strong>Resource Cost:</strong> {plan['resource_cost']}</p>
+        <div style='padding: 15px; margin-bottom: 15px; border: 2px solid #004085; border-radius: 5px; background-color: #cce5ff;'>
+            <h4 style='color: #003d7a; margin-top: 0;'>Plan {idx}: {plan['plan_name']}</h4>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Plan ID:</strong> {plan['plan_id']}</p>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Approach:</strong> {plan['approach']}</p>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Effectiveness:</strong> {plan['effectiveness']}%</p>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Execution Time:</strong> {plan['execution_time']} seconds</p>
+            <p style='color: #003d7a; margin: 5px 0;'><strong>Resource Cost:</strong> {plan['resource_cost']}</p>
             
-            <details>
-                <summary><strong>Countermeasures</strong></summary>
-                <ul>
+            <details style='margin-top: 10px;'>
+                <summary style='color: #003d7a; font-weight: bold; cursor: pointer;'>Countermeasures</summary>
+                <ul style='color: #003d7a; margin-top: 5px;'>
         """
         
         for cm in plan['countermeasures']:
@@ -210,8 +282,8 @@ def _format_plans(plans):
             </details>
             
             <details style='margin-top: 10px;'>
-                <summary><strong>PROS</strong></summary>
-                <ul style='color: green;'>
+                <summary style='color: #155724; font-weight: bold; cursor: pointer;'>PROS</summary>
+                <ul style='color: #155724; margin-top: 5px;'>
         """
         
         for pro in plan['pros']:
@@ -222,8 +294,8 @@ def _format_plans(plans):
             </details>
             
             <details style='margin-top: 10px;'>
-                <summary><strong>CONS</strong></summary>
-                <ul style='color: #856404;'>
+                <summary style='color: #721c24; font-weight: bold; cursor: pointer;'>CONS</summary>
+                <ul style='color: #721c24; margin-top: 5px;'>
         """
         
         for con in plan['cons']:
@@ -252,8 +324,37 @@ def _read_reports(output_files):
     return reports_text if reports_text else "No reports generated yet"
 
 
+def _read_drone_analysis(output_files):
+    """Read drone analysis report specifically for drone analysis tab"""
+    drone_path = output_files.get('drone_analysis')
+    
+    if drone_path and Path(drone_path).exists():
+        with open(drone_path) as f:
+            return f.read()
+    
+    return "No drone analysis available yet. Run detection first."
+
+
 # Build Gradio interface
-with gr.Blocks(title="Naval Threat Detection System", theme=gr.themes.Soft()) as app:
+with gr.Blocks(
+    title="Naval Threat Detection System",
+    css="""
+    .dark-green-btn {
+        background-color: #1b5e20 !important;
+        border-color: #1b5e20 !important;
+    }
+    .dark-green-btn:hover {
+        background-color: #2e7d32 !important;
+        border-color: #2e7d32 !important;
+    }
+
+    /* TARGETED FIX: This overrides the orange highlight on the Tabs */
+    .tabs .tab-nav button.selected {
+        color: #004085 !important; /* Change active text to Dark Blue */
+        border-bottom-color: #004085 !important; /* Change underline to Dark Blue */
+    }
+    """
+) as app:
     gr.Markdown("""
     # 🚢 Naval Threat Detection System v1
     
@@ -276,34 +377,42 @@ with gr.Blocks(title="Naval Threat Detection System", theme=gr.themes.Soft()) as
                 lines=5
             )
             
-            detect_btn = gr.Button("🔍 Detect Threats", variant="primary")
+            detect_btn = gr.Button("🔍 Detect Threats", variant="primary", elem_classes="dark-green-btn")
         
         with gr.Column(scale=2):
             gr.Markdown("### Detection Results")
             
             status_output = gr.HTML(label="Status")
-            plans_output = gr.HTML(label="Tactical Plans")
+            
+            # Tabbed interface for different report types
+            with gr.Tabs():
+                with gr.Tab("📋 Tactical Plans"):
+                    plans_output = gr.HTML(label="Available Plans")
+                
+                with gr.Tab("🚁 Drone Analysis"):
+                    drone_analysis_output = gr.Markdown(label="Drone Threat Analysis")
+                
+                with gr.Tab("📊 All Reports"):
+                    reports_output = gr.Textbox(
+                        label="Detailed Analysis Reports",
+                        lines=20,
+                        max_lines=50
+                    )
     
     with gr.Row(visible=False) as plan_selection_row:
         gr.Markdown("### Select Countermeasure Plan")
-        plan1_btn = gr.Button("Execute Plan 1", variant="secondary")
-        plan2_btn = gr.Button("Execute Plan 2", variant="secondary")
-        plan3_btn = gr.Button("Execute Plan 3", variant="secondary")
+        with gr.Row():
+            plan1_btn = gr.Button("Execute Plan 1", variant="primary", elem_classes="dark-green-btn")
+            plan2_btn = gr.Button("Execute Plan 2", variant="primary", elem_classes="dark-green-btn")
+            plan3_btn = gr.Button("Execute Plan 3", variant="primary", elem_classes="dark-green-btn")
     
     execution_output = gr.HTML(label="Execution Results")
-    
-    with gr.Accordion("📄 Detailed Reports", open=False):
-        reports_output = gr.Textbox(
-            label="Generated Reports",
-            lines=20,
-            max_lines=50
-        )
     
     # Connect events
     detect_btn.click(
         fn=process_threat_detection,
         inputs=[image_input, radar_input],
-        outputs=[status_output, plans_output, reports_output, plan_selection_row]
+        outputs=[status_output, plans_output, drone_analysis_output, reports_output, plan_selection_row]
     )
     
     plan1_btn.click(
@@ -349,13 +458,22 @@ with gr.Blocks(title="Naval Threat Detection System", theme=gr.themes.Soft()) as
 
 
 if __name__ == "__main__":
+
     logger.info("Starting Gradio interface for Image-based Naval Threat Detection System")
+    naval_theme = gr.themes.Default(primary_hue="green")
 
     try:
         app.launch(
+            theme=naval_theme,
             server_name="0.0.0.0",
             server_port=7862,
-            share=False
+            share=False,
+            css="""
+            .tabs .tab-nav button.selected { 
+                color: #004085 !important; 
+                border-bottom-color: #004085 !important; 
+            }
+            """
         )
     except KeyboardInterrupt:
         pass
@@ -363,4 +481,4 @@ if __name__ == "__main__":
         logger.info("="*50)
         logger.info(" Image-processor Agent stopped gracefully")
         logger.info("="*50)
-
+    

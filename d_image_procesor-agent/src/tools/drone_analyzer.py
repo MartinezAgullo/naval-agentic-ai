@@ -40,7 +40,9 @@ class DroneAnalysisTool(BaseTool):
     )
     args_schema: type[BaseModel] = DroneAnalysisInput
     
+    # Use PrivateAttr for internal state (not a Pydantic field)
     _drone_database: Optional[Dict[str, Any]] = PrivateAttr(default=None)
+    
     def __init__(self):
         super().__init__()
         self._drone_database = self._load_drone_database()
@@ -111,6 +113,13 @@ class DroneAnalysisTool(BaseTool):
             logger.error(f"JSON parsing error: {e}")
             return json.dumps({"error": "Invalid JSON input"})
         
+        # Handle if threat is a list (multiple threats)
+        if isinstance(threat, list):
+            if not threat:
+                return json.dumps({"error": "Empty threat list"})
+            # Analyze first threat in list
+            threat = threat[0]
+        
         # Check if this is actually a drone
         object_type = threat.get("object_type", "unknown")
         if object_type not in ["drone", "aircraft"]:
@@ -136,10 +145,19 @@ class DroneAnalysisTool(BaseTool):
         doppler = threat.get("doppler_hz")
         rotor_estimate = threat.get("estimated_rotor_count", "unknown")
         
-        # Classify drone type
-        drone_type, size_class = self._classify_drone_type(
-            velocity, doppler, rotor_estimate
-        )
+        # Check if we have Nyckel classification available
+        nyckel_type = threat.get("nyckel_drone_type")
+        
+        if nyckel_type:
+            # Use Nyckel classification (more accurate)
+            logger.info(f"Using Nyckel classification: {nyckel_type}")
+            drone_type, size_class = self._classify_from_nyckel(nyckel_type)
+        else:
+            # Fallback to Doppler-based classification
+            logger.info("No Nyckel data, using Doppler-based classification")
+            drone_type, size_class = self._classify_drone_type(
+                velocity, doppler, rotor_estimate
+            )
         
         # Get drone characteristics from database
         characteristics = self._drone_database.get(
@@ -186,7 +204,7 @@ class DroneAnalysisTool(BaseTool):
         rotor_estimate: str
     ) -> tuple[str, str]:
         """
-        Classify drone type based on characteristics.
+        Classify drone type based on characteristics (fallback method).
         """
         # Use Doppler and velocity for classification
         if doppler and abs(doppler) > 50:
@@ -204,6 +222,31 @@ class DroneAnalysisTool(BaseTool):
         else:
             # Default to medium multi-rotor
             return "medium_multirotor", "tactical"
+    
+    def _classify_from_nyckel(self, nyckel_type: str) -> tuple[str, str]:
+        """
+        Classify drone using Nyckel commercial classification.
+        Maps Nyckel types to our internal drone database categories.
+        """
+        # Map Nyckel classifications to our categories
+        nyckel_mapping = {
+            "Agricultural Drone": ("medium_multirotor", "commercial"),
+            "Delivery Drone": ("small_multirotor", "commercial"),
+            "Industrial Drone": ("medium_multirotor", "tactical"),
+            "Camera Drone": ("small_multirotor", "mini"),
+            "FPV Drone": ("small_multirotor", "mini"),
+            "Inspection Drone": ("small_multirotor", "commercial"),
+            "Cinematography Drone": ("medium_multirotor", "commercial"),
+            "Fixed-Wing": ("fixed_wing", "tactical"),
+            "Mapping Drone": ("medium_multirotor", "commercial"),
+            "Monitoring Drone": ("medium_multirotor", "tactical"),
+            "Military Drone": ("large_multirotor", "tactical/strategic")
+        }
+        
+        return nyckel_mapping.get(
+            nyckel_type,
+            ("medium_multirotor", "tactical")  # Default
+        )
     
     def _assess_swarm_potential(
         self,

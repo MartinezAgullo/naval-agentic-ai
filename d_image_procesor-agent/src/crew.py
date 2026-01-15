@@ -4,7 +4,6 @@ Defines the AI agents and tasks for naval visual threat detection and response
 """
 
 from pathlib import Path
-from typing import List
 import yaml
 
 from crewai import Agent, Crew, Process, Task
@@ -13,6 +12,7 @@ from crewai.project import CrewBase, agent, crew, task
 # Import tools
 from src.tools.vision_detector import YOLODetectionTool
 from src.tools.radar_fusion import RadarFusionTool
+from src.tools.nyckel_classifier import NyckelDroneClassifier
 from src.tools.drone_analyzer import DroneAnalysisTool
 from src.tools.actuators import (
     DEWActuator,
@@ -74,22 +74,23 @@ class ThreatDetectionCrew:
         
         logger.info(f"Tools initialized: {len(self.vision_tools) + len(self.drone_tools) + len(self.actuator_tools)} total")
     
-    def _setup_vision_tools(self) -> List:
+    def _setup_vision_tools(self) -> list:
         """Initialize vision and fusion tools"""
         logger.debug("Setting up vision tools")
         return [
             YOLODetectionTool(),
-            RadarFusionTool()
+            RadarFusionTool(),
+            NyckelDroneClassifier()  # Precise drone type classification
         ]
     
-    def _setup_drone_tools(self) -> List:
+    def _setup_drone_tools(self) -> list:
         """Initialize drone analysis tools"""
         logger.debug("Setting up drone analysis tools")
         return [
             DroneAnalysisTool()
         ]
     
-    def _setup_actuator_tools(self) -> List:
+    def _setup_actuator_tools(self) -> list:
         """Initialize actuator tools"""
         logger.debug("Setting up actuator tools")
         return [

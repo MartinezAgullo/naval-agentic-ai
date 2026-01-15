@@ -64,6 +64,7 @@ This system processes visual inputs from ship cameras and radar traces to detect
 ### Detection Tools
 - **YOLODetectionTool**: Computer vision object detection (ultralytics YOLOv8)
 - **RadarFusionTool**: Fuses visual detections with radar traces, analyzes Doppler signatures
+- **NyckelDroneClassifier**: Commercial AI for precise drone type identification (11 types)
 
 ### Analysis Tools
 - **DroneAnalysisTool**: Specialized drone classification and countermeasure recommendation
@@ -130,6 +131,11 @@ Create a `.env` file:
 # LLM Provider (choose one)
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Nyckel Drone Classification (optional but recommended)
+# Get free account at: https://www.nyckel.com/console
+NYCKEL_CLIENT_ID=your-client-id
+NYCKEL_CLIENT_SECRET=your-client-secret
 
 # Optional: Logging level
 LOG_LEVEL=INFO

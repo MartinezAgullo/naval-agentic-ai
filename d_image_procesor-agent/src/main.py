@@ -40,7 +40,8 @@ logger.debug("="*70)
 def run_threat_detection(
     images: list[str],
     radar_data: Optional[str] = None,
-    hitl_callback: Optional[Callable[[list], str]] = None
+    hitl_callback: Optional[Callable[[list], str]] = None,
+    skip_execution: bool = False  # NEW: Skip execution for Gradio
 ) -> Dict[str, Any]:
     """
     Run the threat detection workflow with Human In The Loop.
@@ -114,6 +115,22 @@ def run_threat_detection(
             }
         
         logger.info(f"{len(plans)} plans extracted: {[p['plan_id'] for p in plans]}")
+        
+        # If skip_execution is True, return plans WITHOUT executing (for Gradio UI)
+        if skip_execution:
+            logger.info("Skipping execution - returning plans for Gradio UI selection")
+            return {
+                'success': True,
+                'result': result,
+                'output_files': {
+                    'visual_detection': 'output/visual_detection_task.md',
+                    'threat_coordination': 'output/threat_coordination_task.md',
+                    'drone_analysis': 'output/drone_analysis_task.md',
+                    'tactical_planning': 'output/tactical_planning_task.md',
+                },
+                'selected_plan': None,
+                'plans': plans
+            }
         
         # ===================================================================
         # HUMAN IN THE LOOP - Plan Selection

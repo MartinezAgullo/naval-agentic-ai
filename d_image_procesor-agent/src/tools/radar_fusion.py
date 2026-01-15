@@ -3,7 +3,7 @@ Radar-Vision Fusion Tool.
 Combines visual detections with radar traces to improve threat assessment.
 """
 
-from typing import List, Dict, Any
+from typing import Dict, Any
 import json
 import math
 
@@ -72,14 +72,24 @@ class RadarFusionTool(BaseTool):
             logger.error(f"JSON parsing error: {e}")
             return json.dumps({"error": "Invalid JSON input"})
         
-        # Extract detection list
-        detection_list = detections.get("detections", [])
+        # Handle if detections is already a list (agent passed list directly)
+        if isinstance(detections, list):
+            detection_list = detections
+        else:
+            # Extract detection list from dict
+            detection_list = detections.get("detections", [])
+        
         if not detection_list:
             logger.warning("No visual detections provided")
             return json.dumps({"fused_threats": [], "total_fused": 0})
         
-        # Extract radar traces list
-        trace_list = radar_traces.get("traces", [])
+        # Handle if radar_traces is already a list
+        if isinstance(radar_traces, list):
+            trace_list = radar_traces
+        else:
+            # Extract radar traces list from dict
+            trace_list = radar_traces.get("traces", [])
+        
         if not trace_list:
             logger.warning("No radar traces provided, returning visual-only detections")
             return self._visual_only_output(detection_list)
@@ -102,10 +112,10 @@ class RadarFusionTool(BaseTool):
     
     def _correlate_detections(
         self,
-        detections: List[Dict],
-        radar_traces: List[Dict],
+        detections: list[Dict],
+        radar_traces: list[Dict],
         threshold_m: float
-    ) -> List[Dict]:
+    ) -> list[Dict]:
         """
         Correlate visual detections with radar traces.
         
@@ -225,7 +235,7 @@ class RadarFusionTool(BaseTool):
         
         return threat
     
-    def _visual_only_output(self, detections: List[Dict]) -> str:
+    def _visual_only_output(self, detections: list[Dict]) -> str:
         """
         Return visual-only detections when no radar data available.
         """

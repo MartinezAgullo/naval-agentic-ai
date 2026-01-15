@@ -3,7 +3,7 @@ Data models for threat detection system.
 Defines structured data types for visual inputs, radar data, and threat assessments.
 """
 
-from typing import List, Dict, Optional, Literal
+from typing import Dict, Optional, Literal, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -88,13 +88,13 @@ class CountermeasurePlan(BaseModel):
     """
     plan_id: str
     plan_name: str
-    target_threats: List[str]  # threat_ids
-    countermeasures: List[Dict[str, any]]
+    target_threats: list[str]  # threat_ids
+    countermeasures: list[Dict[str, Any]]
     estimated_effectiveness: float = Field(ge=0, le=100)
     execution_time_s: float
     resource_cost: Literal["LOW", "MEDIUM", "HIGH"]
-    pros: List[str]
-    cons: List[str]
+    pros: list[str]
+    cons: list[str]
 
 
 class ExecutionResult(BaseModel):
@@ -103,9 +103,9 @@ class ExecutionResult(BaseModel):
     """
     plan_id: str
     success: bool
-    executed_countermeasures: List[Dict[str, any]]
-    threats_neutralized: List[str]
-    threats_remaining: List[str]
+    executed_countermeasures: list[Dict[str, Any]]
+    threats_neutralized: list[str]
+    threats_remaining: list[str]
     overall_effectiveness: float = Field(ge=0, le=100)
     execution_time_s: float
     final_status: str
