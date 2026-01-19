@@ -367,6 +367,18 @@ with gr.Blocks(
                 file_types=["image"]
             )
             
+            # Image preview
+            with gr.Accordion("📸 Image Preview", open=True):
+                image_preview = gr.Gallery(
+                    label="Uploaded Images",
+                    show_label=False,
+                    elem_id="gallery",
+                    columns=2,
+                    rows=2,
+                    height="auto",
+                    object_fit="contain"
+                )
+            
             radar_input = gr.Textbox(
                 label="Radar Data (Optional JSON)",
                 placeholder='{"traces": [...]}',
@@ -409,6 +421,29 @@ with gr.Blocks(
     execution_output = gr.HTML(label="Execution Results")
     
     # Connect events
+    
+    # Update image preview when images are uploaded
+    def update_image_preview(files):
+        """Update gallery when images are uploaded"""
+        if not files:
+            return []
+        
+        # Extract file paths
+        image_paths = []
+        for file in files:
+            if hasattr(file, 'name'):
+                image_paths.append(file.name)
+            elif isinstance(file, str):
+                image_paths.append(file)
+        
+        return image_paths
+    
+    image_input.change(
+        fn=update_image_preview,
+        inputs=[image_input],
+        outputs=[image_preview]
+    )
+    
     detect_btn.click(
         fn=process_threat_detection,
         inputs=[image_input, radar_input],
